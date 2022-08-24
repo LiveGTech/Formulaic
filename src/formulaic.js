@@ -44,7 +44,6 @@ export class ExpressionNode {
 
     static parseTokens(tokens, referenceFunction = DIRECT_FUNCTION) {
         // TODO: Implement full token parsing
-        // We should first parse entities (so that cases where entity splits into multiple tokens can be resolved), then everything else
 
         var instance = new this([], referenceFunction);
 
@@ -85,6 +84,7 @@ export class ExpressionNode {
                         innerTokens.push(tokens[i++]);
                     }
 
+                    // FIXME: We shouldn't push to children here, but instead just a stack containing expression nodes, literals etc.
                     if (type == "call") {
                         instance.children.push(ExpressionNode.parseTokens(innerTokens, functions.find((currentFunction) => currentFunction.name == functionName)));
                     } else {
@@ -98,6 +98,7 @@ export class ExpressionNode {
 
                 case "separator":
                     // Mainly just syntactic sugar for now; though this will be important for operator precedence evaluation when we implement them
+                    // FIXME: The expression node stack should be two-dimensional for arg keeping before they are added as children
                     continue;
             }
         }
