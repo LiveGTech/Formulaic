@@ -21,12 +21,39 @@ export class Concept {
 }
 
 export class Operator {
-    constructor(code, registerAsConcept = true) {
+    constructor(code, referenceFunction = DIRECT_FUNCTION, registerAsConcept = true) {
         this.code = code;
+        this.referenceFunction = referenceFunction;
 
         if (registerAsConcept) {
             this.registerAsConcept();
         }
+    }
+
+    transform(children) {
+        return children;
+    }
+
+    reduce(children) {
+        var reducedChildren = [...children];
+        var reductionNeeded = true;
+
+        while (reductionNeeded) {
+            reductionNeeded = false;
+
+            for (var i = 0; i < reducedChildren.length; i++) {
+                var child = reducedChildren[i];
+
+                if (child instanceof Token && child.type == "operator" && child.code == this.code) {
+                    reducedChildren = this.transform(reducedChildren);
+                    reductionNeeded = true;
+
+                    break;
+                }
+            }
+        }
+
+        return reducedChildren;
     }
 
     registerAsConcept() {
@@ -44,18 +71,52 @@ export class Operator {
     }
 }
 
+export class BinaryOperator extends Operator {
+    transform(children) {
+        var args = [[], []];
+        var reachedOperator = false;
+
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+
+            if (!reachedOperator && child instanceof Token && child.type == "operator" && child.code == this.code) {
+                reachedOperator = true;
+
+                continue;
+            }
+
+            if (!reachedOperator) {
+                args[0].push(child);
+            } else {
+                args[1].push(child);
+            }
+        }
+
+        var expression = new ExpressionNode([
+            ...args[0],
+            new Token("separator", ","),
+            ...args[1]
+        ], this.referenceFunction);
+
+        expression.reduceChildren();
+
+        return [expression];
+    }
+}
+
 export const DIRECT_FUNCTION = new Function(null, (value) => Promise.resolve(value));
 
 export var functions = [
-    new Function("a", () => Promise.resolve("a")),
-    new Function("b", () => Promise.resolve("b")),
-    new Function("join", (a, b) => Promise.resolve(`${a} ${b}`))
+    new Function("a", () => Promise.resolve(3)),
+    new Function("b", () => Promise.resolve(5)),
+    new Function("add", (a, b) => Promise.resolve(a + b))
 ];
 
 export var concepts = [];
 
 export var operators = [
-    new Operator("+")
+    new BinaryOperator("+", new Function("add", (a, b) => Promise.resolve(a + b))),
+    new BinaryOperator("*", new Function("multiply", (a, b) => Promise.resolve(a * b)))
 ];
 
 export class ExpressionLiteral {
@@ -138,38 +199,35 @@ export class ExpressionNode {
             }
         }
 
-        // TODO: Operator transformation into functions to be implemented here
+        instance.reduceChildren();
 
         console.log(instance.children);
 
-        var finalChildren = [];
-        var hadExpression = false;
+        return instance;
+    }
 
-        for (var i = 0; i < instance.children.length; i++) {
-            var child = instance.children[i];
+    reduceChildren() {
+        var argumentChildren = [[]];
 
-            if (child instanceof Token) {
-                if (child.type == "separator") {
-                    hadExpression = false;
+        for (var i = 0; i < this.children.length; i++) {
+            var child = this.children[i];
 
-                    continue;
-                }
+            if (child instanceof Token && child.type == "separator") {
+                argumentChildren.push([]);
 
-                throw new Error("Unresolved token conversion");
+                continue;
             }
 
-            if (hadExpression) {
-                throw new SyntaxError("Expected a separator");
-            }
-
-            finalChildren.push(child);
-
-            hadExpression = true;
+            argumentChildren[argumentChildren.length - 1].push(child);
         }
 
-        instance.children = finalChildren;
+        for (var i = 0; i < operators.length; i++) {
+            for (var j = 0; j < argumentChildren.length; j++) {
+                argumentChildren[j] = operators[i].reduce(argumentChildren[j]);
+            }
+        }
 
-        return instance;
+        this.children = argumentChildren.flat();
     }
 
     evaluate() {

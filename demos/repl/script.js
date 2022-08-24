@@ -6,7 +6,7 @@ window.addEventListener("load", function() {
             var expression = formulaic.Expression.parse(document.querySelector("#input").value);
 
             expression.evaluate().then(function(result) {
-                document.querySelector("#output").textContent += (result?.toString() ?? result) + "\n";
+                document.querySelector("#output").textContent += `${document.querySelector("#input").value} = ${result?.toString() ?? result}\n`;
                 document.querySelector("#input").value = "";
             });
         }
