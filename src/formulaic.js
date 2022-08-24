@@ -21,8 +21,8 @@ export class Concept {
 }
 
 export class Operator {
-    constructor(code, referenceFunction = DIRECT_FUNCTION, registerAsConcept = true) {
-        this.code = code;
+    constructor(codeCandidates, referenceFunction = DIRECT_FUNCTION, registerAsConcept = true) {
+        this.codeCandidates = codeCandidates;
         this.referenceFunction = referenceFunction;
 
         if (registerAsConcept) {
@@ -44,7 +44,7 @@ export class Operator {
             for (var i = 0; i < reducedChildren.length; i++) {
                 var child = reducedChildren[i];
 
-                if (child instanceof Token && child.type == "operator" && child.code == this.code) {
+                if (child instanceof Token && child.type == "operator" && this.codeCandidates.includes(child.code)) {
                     reducedChildren = this.transform(reducedChildren);
                     reductionNeeded = true;
 
@@ -61,8 +61,10 @@ export class Operator {
 
         concepts.push(new (class extends Concept {
             match(code) {
-                if (code.startsWith(thisScope.code)) {
-                    return new Token("operator", thisScope.code);
+                for (var i = 0; i < thisScope.codeCandidates.length; i++) {
+                    if (code.startsWith(thisScope.codeCandidates[i])) {
+                        return new Token("operator", thisScope.codeCandidates[i]);
+                    }
                 }
 
                 return null;
@@ -79,7 +81,7 @@ export class BinaryOperator extends Operator {
         for (var i = 0; i < children.length; i++) {
             var child = children[i];
 
-            if (!reachedOperator && child instanceof Token && child.type == "operator" && child.code == this.code) {
+            if (!reachedOperator && child instanceof Token && child.type == "operator" && this.codeCandidates.includes(child.code)) {
                 reachedOperator = true;
 
                 continue;
@@ -107,16 +109,28 @@ export class BinaryOperator extends Operator {
 export const DIRECT_FUNCTION = new Function(null, (value) => Promise.resolve(value));
 
 export var functions = [
-    new Function("a", () => Promise.resolve(3)),
-    new Function("b", () => Promise.resolve(5)),
-    new Function("add", (a, b) => Promise.resolve(a + b))
+    new Function("sqrt", (value) => Promise.resolve(Math.sqrt(value)))
 ];
 
-export var concepts = [];
+export var concepts = [
+    new (class extends Concept {
+        match(code) {
+            var match;
+
+            if (match = code.match(/^(\d+)/)) {
+                return new LiteralToken(IntegerLiteral, match[1]);
+            }
+
+            return null;
+        }
+    })()
+];
 
 export var operators = [
-    new BinaryOperator("+", new Function("add", (a, b) => Promise.resolve(a + b))),
-    new BinaryOperator("*", new Function("multiply", (a, b) => Promise.resolve(a * b)))
+    new BinaryOperator(["+", "-"], new Function("add", (a, b) => Promise.resolve(a + b))),
+    new BinaryOperator(["-", "subtract"], new Function("add", (a, b) => Promise.resolve(a - b))),
+    new BinaryOperator(["*", "times"], new Function("multiply", (a, b) => Promise.resolve(a * b))),
+    new BinaryOperator(["/", "divide"], new Function("add", (a, b) => Promise.resolve(a / b)))
 ];
 
 export class ExpressionLiteral {
@@ -130,6 +144,15 @@ export class ExpressionLiteral {
 
     evaluate() {
         return Promise.resolve(this.value);
+    }
+
+    reduceChildren() {}
+}
+
+export class IntegerLiteral extends ExpressionLiteral {
+    static parse(code) {
+        // Parse an integer using built-in function for now as a test
+        return new this(parseInt(code));
     }
 }
 
@@ -192,6 +215,10 @@ export class ExpressionNode {
                 case "close":
                     throw new SyntaxError("Expected an opening bracket or function call");
 
+                case "literal":
+                    instance.children.push(token.literalClass.parse(token.code));
+                    continue;
+
                 case "separator":
                 case "operator":
                     instance.children.push(token);
@@ -243,6 +270,14 @@ export class Token {
     constructor(type, code) {
         this.type = type;
         this.code = code;
+    }
+}
+
+export class LiteralToken extends Token {
+    constructor(literalClass, code) {
+        super("literal", code);
+
+        this.literalClass = literalClass;
     }
 }
 
