@@ -14,12 +14,48 @@ export class Function {
     }
 }
 
+export class Concept {
+    match(code) {
+        return null;
+    }
+}
+
+export class Operator {
+    constructor(code, registerAsConcept = true) {
+        this.code = code;
+
+        if (registerAsConcept) {
+            this.registerAsConcept();
+        }
+    }
+
+    registerAsConcept() {
+        var thisScope = this;
+
+        concepts.push(new (class extends Concept {
+            match(code) {
+                if (code.startsWith(thisScope.code)) {
+                    return new Token("operator", thisScope.code);
+                }
+
+                return null;
+            }
+        })());
+    }
+}
+
 export const DIRECT_FUNCTION = new Function(null, (value) => Promise.resolve(value));
 
 export var functions = [
     new Function("a", () => Promise.resolve("a")),
     new Function("b", () => Promise.resolve("b")),
     new Function("join", (a, b) => Promise.resolve(`${a} ${b}`))
+];
+
+export var concepts = [];
+
+export var operators = [
+    new Operator("+")
 ];
 
 export class ExpressionLiteral {
@@ -50,9 +86,9 @@ export class ExpressionNode {
         console.log(tokens);
 
         for (var i = 0; i < tokens.length; i++) {
-            var type = tokens[i].type;
+            var token = tokens[i];
 
-            switch (type) {
+            switch (token.type) {
                 case "call":
                     var functionName = tokens[i].code.match(/([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/)[1];
 
@@ -84,8 +120,7 @@ export class ExpressionNode {
                         innerTokens.push(tokens[i++]);
                     }
 
-                    // FIXME: We shouldn't push to children here, but instead just a stack containing expression nodes, literals etc.
-                    if (type == "call") {
+                    if (token.type == "call") {
                         instance.children.push(ExpressionNode.parseTokens(innerTokens, functions.find((currentFunction) => currentFunction.name == functionName)));
                     } else {
                         instance.children.push(ExpressionNode.parseTokens(innerTokens));
@@ -93,15 +128,46 @@ export class ExpressionNode {
 
                     continue;
 
-                    case "close":
-                        throw new SyntaxError("Expected an opening bracket or function call");
+                case "close":
+                    throw new SyntaxError("Expected an opening bracket or function call");
 
                 case "separator":
-                    // Mainly just syntactic sugar for now; though this will be important for operator precedence evaluation when we implement them
-                    // FIXME: The expression node stack should be two-dimensional for arg keeping before they are added as children
+                case "operator":
+                    instance.children.push(token);
                     continue;
             }
         }
+
+        // TODO: Operator transformation into functions to be implemented here
+
+        console.log(instance.children);
+
+        var finalChildren = [];
+        var hadExpression = false;
+
+        for (var i = 0; i < instance.children.length; i++) {
+            var child = instance.children[i];
+
+            if (child instanceof Token) {
+                if (child.type == "separator") {
+                    hadExpression = false;
+
+                    continue;
+                }
+
+                throw new Error("Unresolved token conversion");
+            }
+
+            if (hadExpression) {
+                throw new SyntaxError("Expected a separator");
+            }
+
+            finalChildren.push(child);
+
+            hadExpression = true;
+        }
+
+        instance.children = finalChildren;
 
         return instance;
     }
@@ -132,23 +198,11 @@ export class Expression {
 
         var tokens = [];
         var tokenToAdd = "";
-        var inEntity = false;
-        var entityToAdd = "";
-
-        function checkEntity() {
-            if (inEntity) {
-                tokens.push(new Token("entity", entityToAdd));
-            }
-
-            inEntity = false;
-        }
 
         function matchesToken(token, contextAfter = ".*") {
             var matches = code.match(new RegExp(`^(?:${token})`, "sm"));
 
             if (matches && code.substring(matches[0].length).match(new RegExp(`^(?:${contextAfter})`, "s"))) {
-                checkEntity();
-
                 tokenToAdd = matches[0];
                 code = code.substring(matches[0].length);
 
@@ -162,6 +216,7 @@ export class Expression {
             tokens.push(new Token(type, tokenToAdd));
         }
 
+        parseLoop:
         while (code.length > 0) {
             if (matchesToken("\\/\\/.*?$")) {
                 // Comment match
@@ -171,6 +226,24 @@ export class Expression {
             if (matchesToken("\\/\\*.*?\\*\\/")) {
                 // Comment match
                 continue;
+            }
+
+            for (var i = 0; i < concepts.length; i++) {
+                var match = concepts[i].match(code);
+
+                if (match == null) {
+                    continue;
+                }
+
+                if (!code.startsWith(match.code)) {
+                    throw new Error("Concept does not return subset of code");
+                }
+
+                tokens.push(match);
+
+                code = code.substring(match.code.length);
+
+                continue parseLoop;
             }
 
             if (matchesToken("[a-zA-Z_][a-zA-Z0-9_]*\\s*\\(")) {
@@ -198,12 +271,8 @@ export class Expression {
                 continue;
             }
 
-            inEntity = true;
-            entityToAdd += code[0];
-            code = code.substring(1);
+            throw new SyntaxError(`Unexpected token: ${code[0]}`);
         }
-
-        checkEntity();
 
         return new this(ExpressionNode.parseTokens(tokens));
     }
