@@ -127,7 +127,7 @@ export var concepts = [
 ];
 
 export var operators = [
-    new BinaryOperator(["+", "-"], new Function("add", (a, b) => Promise.resolve(a + b))),
+    new BinaryOperator(["+", "add"], new Function("add", (a, b) => Promise.resolve(a + b))),
     new BinaryOperator(["-", "subtract"], new Function("add", (a, b) => Promise.resolve(a - b))),
     new BinaryOperator(["*", "times"], new Function("multiply", (a, b) => Promise.resolve(a * b))),
     new BinaryOperator(["/", "divide"], new Function("add", (a, b) => Promise.resolve(a / b)))
