@@ -7,7 +7,7 @@
     Licensed by the LiveG Open-Source Licence, which can be found at LICENCE.md.
 */
 
-export class Function {
+export class FunctionBinding {
     constructor(name, callback) {
         this.name = name;
         this.callback = callback;
@@ -21,13 +21,16 @@ export class Concept {
 }
 
 export class Operator {
-    constructor(codeCandidates, referenceFunction = DIRECT_FUNCTION, registerAsConcept = true) {
-        this.codeCandidates = codeCandidates;
-        this.referenceFunction = referenceFunction;
+    constructor(codeBindings = {}, registerAsConcept = true) {
+        this.codeBindings = codeBindings;
 
         if (registerAsConcept) {
             this.registerAsConcept();
         }
+    }
+
+    isTargetToken(item) {
+        return item instanceof Token && item.type == "operator" && Object.keys(this.codeBindings).includes(item.code);
     }
 
     transform(children) {
@@ -42,9 +45,7 @@ export class Operator {
             reductionNeeded = false;
 
             for (var i = 0; i < reducedChildren.length; i++) {
-                var child = reducedChildren[i];
-
-                if (child instanceof Token && child.type == "operator" && this.codeCandidates.includes(child.code)) {
+                if (this.isTargetToken(reducedChildren[i])) {
                     reducedChildren = this.transform(reducedChildren);
                     reductionNeeded = true;
 
@@ -61,9 +62,11 @@ export class Operator {
 
         concepts.push(new (class extends Concept {
             match(code) {
-                for (var i = 0; i < thisScope.codeCandidates.length; i++) {
-                    if (code.startsWith(thisScope.codeCandidates[i])) {
-                        return new Token("operator", thisScope.codeCandidates[i]);
+                for (var i = 0; i < Object.keys(thisScope.codeBindings).length; i++) {
+                    var operatorCode = Object.keys(thisScope.codeBindings)[i];
+
+                    if (code.startsWith(operatorCode)) {
+                        return new Token("operator", operatorCode);
                     }
                 }
 
@@ -74,23 +77,43 @@ export class Operator {
 }
 
 export class BinaryOperator extends Operator {
+    constructor(codeBindings = {}, leftAssociative = true, registerAsConcept = true) {
+        super(codeBindings, registerAsConcept);
+
+        this.leftAssociative = leftAssociative;
+    }
+
     transform(children) {
         var args = [[], []];
         var reachedOperator = false;
+        var operatorToken = null;
 
-        for (var i = 0; i < children.length; i++) {
+        for (
+            var i = this.leftAssociative ? children.length - 1 : 0;
+            this.leftAssociative ? i >= 0 : i < children.length;
+            this.leftAssociative ? i-- : i++
+        ) {
             var child = children[i];
 
-            if (!reachedOperator && child instanceof Token && child.type == "operator" && this.codeCandidates.includes(child.code)) {
+            if (!reachedOperator && this.isTargetToken(child)) {
                 reachedOperator = true;
+                operatorToken = child;
 
                 continue;
             }
 
-            if (!reachedOperator) {
-                args[0].push(child);
+            if (this.leftAssociative) {
+                if (!reachedOperator) {
+                    args[1].unshift(child);
+                } else {
+                    args[0].unshift(child);
+                }
             } else {
-                args[1].push(child);
+                if (!reachedOperator) {
+                    args[0].push(child);
+                } else {
+                    args[1].push(child);
+                }
             }
         }
 
@@ -98,7 +121,7 @@ export class BinaryOperator extends Operator {
             ...args[0],
             new Token("separator", ","),
             ...args[1]
-        ], this.referenceFunction);
+        ], this.codeBindings[operatorToken.code]);
 
         expression.reduceChildren();
 
@@ -106,10 +129,10 @@ export class BinaryOperator extends Operator {
     }
 }
 
-export const DIRECT_FUNCTION = new Function(null, (value) => Promise.resolve(value));
+export const DIRECT_FUNCTION = new FunctionBinding(null, (value) => Promise.resolve(value));
 
 export var functions = [
-    new Function("sqrt", (value) => Promise.resolve(Math.sqrt(value)))
+    new FunctionBinding("sqrt", (value) => Promise.resolve(Math.sqrt(value)))
 ];
 
 export var concepts = [
@@ -127,10 +150,14 @@ export var concepts = [
 ];
 
 export var operators = [
-    new BinaryOperator(["+", "add"], new Function("add", (a, b) => Promise.resolve(a + b))),
-    new BinaryOperator(["-", "subtract"], new Function("add", (a, b) => Promise.resolve(a - b))),
-    new BinaryOperator(["*", "times"], new Function("multiply", (a, b) => Promise.resolve(a * b))),
-    new BinaryOperator(["/", "divide"], new Function("add", (a, b) => Promise.resolve(a / b)))
+    new BinaryOperator({
+        "+": new FunctionBinding("add", (a, b) => Promise.resolve(a + b)),
+        "-": new FunctionBinding("subtract", (a, b) => Promise.resolve(a - b))
+    }),
+    new BinaryOperator({
+        "*": new FunctionBinding("multiply", (a, b) => Promise.resolve(a * b)),
+        "/": new FunctionBinding("divide", (a, b) => Promise.resolve(a / b))
+    })
 ];
 
 export class ExpressionLiteral {
@@ -163,8 +190,6 @@ export class ExpressionNode {
     }
 
     static parseTokens(tokens, referenceFunction = DIRECT_FUNCTION) {
-        // TODO: Implement full token parsing
-
         var instance = new this([], referenceFunction);
 
         console.log(tokens);
@@ -373,4 +398,16 @@ export class Expression {
     evaluate() {
         return this.rootNode.evaluate();
     }
+}
+
+export function registerFunction(functionBinding) {
+    functions.push(functionBinding);
+}
+
+export function registerConcept(concept) {
+    concepts.push(concept);
+}
+
+export function registerOperator(operator) {
+    operators.push(operator);
 }
