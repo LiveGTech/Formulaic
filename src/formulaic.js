@@ -131,34 +131,9 @@ export class BinaryOperator extends Operator {
 
 export const DIRECT_FUNCTION = new FunctionBinding(null, (value) => Promise.resolve(value));
 
-export var functions = [
-    new FunctionBinding("sqrt", (value) => Promise.resolve(Math.sqrt(value)))
-];
-
-export var concepts = [
-    new (class extends Concept {
-        match(code) {
-            var match;
-
-            if (match = code.match(/^(\d+)/)) {
-                return new LiteralToken(IntegerLiteral, match[1]);
-            }
-
-            return null;
-        }
-    })()
-];
-
-export var operators = [
-    new BinaryOperator({
-        "+": new FunctionBinding("add", (a, b) => Promise.resolve(a + b)),
-        "-": new FunctionBinding("subtract", (a, b) => Promise.resolve(a - b))
-    }),
-    new BinaryOperator({
-        "*": new FunctionBinding("multiply", (a, b) => Promise.resolve(a * b)),
-        "/": new FunctionBinding("divide", (a, b) => Promise.resolve(a / b))
-    })
-];
+export var functions = [];
+export var concepts = [];
+export var operators = [];
 
 export class ExpressionLiteral {
     constructor(value) {
@@ -174,13 +149,6 @@ export class ExpressionLiteral {
     }
 
     reduceChildren() {}
-}
-
-export class IntegerLiteral extends ExpressionLiteral {
-    static parse(code) {
-        // Parse an integer using built-in function for now as a test
-        return new this(parseInt(code));
-    }
 }
 
 export class ExpressionNode {

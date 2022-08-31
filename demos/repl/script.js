@@ -1,4 +1,7 @@
 import * as formulaic from "../../src/formulaic.js";
+import * as core from "../../src/core.js";
+
+core.register();
 
 window.addEventListener("load", function() {
     document.querySelector("#input").addEventListener("keydown", function(event) {
