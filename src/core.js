@@ -118,7 +118,11 @@ export function register() {
         "*": new formulaic.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b))),
         "/": new formulaic.FunctionBinding("divide", (a, b) => Promise.resolve(ComplexNumberType.divide(a, b)))
     }));
-    
+
+    formulaic.registerOperator(new formulaic.UnaryOperator({
+        "-": new formulaic.FunctionBinding("negate", (value) => Promise.resolve(ComplexNumberType.subtract(new ComplexNumberType(0), value)))
+    }));
+
     formulaic.registerConcept(new (class extends formulaic.Concept {
         match(code) {
             var match;

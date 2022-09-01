@@ -15,7 +15,7 @@ export class FunctionBinding {
 }
 
 export class Concept {
-    match(code) {
+    match(code, tokens) {
         return null;
     }
 }
@@ -30,7 +30,7 @@ export class Operator {
     }
 
     isTargetToken(item) {
-        return item instanceof Token && item.type == "operator" && Object.keys(this.codeBindings).includes(item.code);
+        return item.owner == this;
     }
 
     transform(children) {
@@ -46,7 +46,13 @@ export class Operator {
 
             for (var i = 0; i < reducedChildren.length; i++) {
                 if (this.isTargetToken(reducedChildren[i])) {
-                    reducedChildren = this.transform(reducedChildren);
+                    var reduction = this.transform(reducedChildren);
+
+                    if (reduction == null) {
+                        continue;
+                    }
+
+                    reducedChildren = reduction;
                     reductionNeeded = true;
 
                     break;
@@ -61,18 +67,53 @@ export class Operator {
         var thisScope = this;
 
         concepts.push(new (class extends Concept {
-            match(code) {
+            match(code, tokens) {
                 for (var i = 0; i < Object.keys(thisScope.codeBindings).length; i++) {
                     var operatorCode = Object.keys(thisScope.codeBindings)[i];
 
                     if (code.startsWith(operatorCode)) {
-                        return new Token("operator", operatorCode);
+                        return new Token("operator", operatorCode, thisScope);
                     }
                 }
 
                 return null;
             }
         })());
+    }
+}
+
+export class UnaryOperator extends Operator {
+    constructor(codeBindings = {}, prefix = true, registerAsConcept = true) {
+        super(codeBindings, registerAsConcept);
+
+        this.prefix = prefix;
+    }
+
+    transform(children) {
+        var arg = [];
+        var operatorToken = null;
+
+        if ((this.prefix && !this.isTargetToken(children[0])) || (!this.prefix && this.isTargetToken(hildren[children.length - 1]))) {
+            return null;
+        }
+
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+
+            if (this.isTargetToken(child)) {
+                operatorToken = child;
+
+                continue;
+            }
+
+            arg.push(child);
+        }
+
+        var expression = new ExpressionNode(arg, this.codeBindings[operatorToken.code]);
+
+        expression.reduceChildren();
+
+        return [expression];
     }
 }
 
@@ -117,6 +158,10 @@ export class BinaryOperator extends Operator {
             }
         }
 
+        if (args[0].length == 0 || args[1].length == 0) {
+            return null;
+        }
+
         var expression = new ExpressionNode([
             ...args[0],
             new Token("separator", ","),
@@ -126,6 +171,24 @@ export class BinaryOperator extends Operator {
         expression.reduceChildren();
 
         return [expression];
+    }
+
+    registerAsConcept() {
+        var thisScope = this;
+
+        concepts.push(new (class extends Concept {
+            match(code, tokens) {
+                for (var i = 0; i < Object.keys(thisScope.codeBindings).length; i++) {
+                    var operatorCode = Object.keys(thisScope.codeBindings)[i];
+
+                    if (code.startsWith(operatorCode) && tokens.length > 0 && !["operator", "call", "open"].includes(tokens[tokens.length - 1].type)) {
+                        return new Token("operator", operatorCode, thisScope);
+                    }
+                }
+
+                return null;
+            }
+        })());
     }
 }
 
@@ -159,8 +222,6 @@ export class ExpressionNode {
 
     static parseTokens(tokens, referenceFunction = DIRECT_FUNCTION) {
         var instance = new this([], referenceFunction);
-
-        console.log(tokens);
 
         for (var i = 0; i < tokens.length; i++) {
             var token = tokens[i];
@@ -221,8 +282,6 @@ export class ExpressionNode {
 
         instance.reduceChildren();
 
-        console.log(instance.children);
-
         return instance;
     }
 
@@ -260,9 +319,10 @@ export class ExpressionNode {
 }
 
 export class Token {
-    constructor(type, code) {
+    constructor(type, code, owner = null) {
         this.type = type;
         this.code = code;
+        this.owner = owner;
     }
 }
 
@@ -315,7 +375,7 @@ export class Expression {
             }
 
             for (var i = 0; i < concepts.length; i++) {
-                var match = concepts[i].match(code);
+                var match = concepts[i].match(code, tokens);
 
                 if (match == null) {
                     continue;
