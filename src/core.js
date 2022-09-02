@@ -120,6 +120,10 @@ export function register() {
     }));
 
     formulaic.registerOperator(new formulaic.UnaryOperator({
+        "+": formulaic.DIRECT_FUNCTION
+    }));
+
+    formulaic.registerOperator(new formulaic.UnaryOperator({
         "-": new formulaic.FunctionBinding("negate", (value) => Promise.resolve(ComplexNumberType.subtract(new ComplexNumberType(0), value)))
     }));
 
