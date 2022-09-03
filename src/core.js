@@ -109,6 +109,8 @@ export class OctalIntegerLiteral extends NumberLiteral {
 }
 
 export function register() {
+    var implicitMultiplyOperator;
+
     formulaic.registerOperator(new formulaic.BinaryOperator({
         "+": new formulaic.FunctionBinding("add", (a, b) => Promise.resolve(ComplexNumberType.add(a, b))),
         "-": new formulaic.FunctionBinding("subtract", (a, b) => Promise.resolve(ComplexNumberType.subtract(a, b)))
@@ -126,6 +128,12 @@ export function register() {
     formulaic.registerOperator(new formulaic.UnaryOperator({
         "-": new formulaic.FunctionBinding("negate", (value) => Promise.resolve(ComplexNumberType.subtract(new ComplexNumberType(0), value)))
     }));
+
+    formulaic.registerOperator(implicitMultiplyOperator = new formulaic.BinaryOperator({
+        "*": new formulaic.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b)))
+    }));
+
+    formulaic.setImplicitOperator(implicitMultiplyOperator);
 
     formulaic.registerConcept(new (class extends formulaic.Concept {
         match(code) {

@@ -197,9 +197,18 @@ export const DIRECT_FUNCTION = new FunctionBinding(null, (value) => Promise.reso
 export var functions = [];
 export var concepts = [];
 export var operators = [];
+export var implicitOperatorToken = null;
 
-export class ExpressionLiteral {
+export class Entity {
+    evaluate() {
+        return Promise.reject("Base class not implemented");
+    }
+}
+
+export class ExpressionLiteral extends Entity {
     constructor(value) {
+        super();
+
         this.value = value;
     }
 
@@ -214,8 +223,10 @@ export class ExpressionLiteral {
     reduceChildren() {}
 }
 
-export class ExpressionNode {
+export class ExpressionNode extends Entity {
     constructor(children = [], referenceFunction = DIRECT_FUNCTION) {
+        super();
+
         this.children = children;
         this.referenceFunction = referenceFunction;
     }
@@ -280,9 +291,28 @@ export class ExpressionNode {
             }
         }
 
+        instance.insertImplicitOperatorTokens();
         instance.reduceChildren();
 
         return instance;
+    }
+
+    insertImplicitOperatorTokens() {
+        if (implicitOperatorToken == null) {
+            return;
+        }
+
+        var newChildren = [];
+
+        this.children.forEach(function(child) {
+            if (newChildren.length > 0 && child instanceof Entity && newChildren[newChildren.length - 1] instanceof Entity) {
+                newChildren.push(implicitOperatorToken);
+            }
+
+            newChildren.push(child);
+        });
+
+        this.children = newChildren;
     }
 
     reduceChildren() {
@@ -438,4 +468,8 @@ export function registerConcept(concept) {
 
 export function registerOperator(operator) {
     operators.push(operator);
+}
+
+export function setImplicitOperator(operator, code = Object.keys(operator.codeBindings)[0]) {
+    implicitOperatorToken = new Token("operator", code, operator);
 }
