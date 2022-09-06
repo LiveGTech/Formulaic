@@ -25,7 +25,7 @@ export class ComplexNumberType {
 
     static multiply(a, b) {
         // (a + bi)(c + di) = (ac - bd) + (ad + bc)i
-        return new ComplexNumberType(
+        return new this(
             (a.real * b.real) - (a.imag * b.imag),
             (a.real * b.imag) + (a.imag * b.real)
         );
@@ -33,26 +33,86 @@ export class ComplexNumberType {
 
     static divide(a, b) {
         // (a + bi) / (c + di) = ((ac + bd) / (c^2 + d^2)) + ((bc - ad) / (c^2 + d^2))i
-        return new ComplexNumberType(
+        return new this(
             ((a.real * b.real) + (a.imag * b.imag)) / ((b.real ** 2) + (b.imag ** 2)),
             ((a.imag * b.real) - (a.real * b.imag)) / ((b.real ** 2) + (b.imag ** 2))
         );
     }
 
-    toString() {
-        if (this.imag != 0) {
-            if (this.real != 0) {
-                if (this.imag < 0) {
-                    return `${this.real} - ${Math.abs(this.imag)}i`;
-                }
-    
-                return `${this.real} + ${this.imag}i`;
-            }
-    
-            return `${this.imag}i`;
+    // @source reference https://github.com/infusion/Complex.js/blob/master/complex.js
+    // @licence mit https://raw.githubusercontent.com/infusion/Complex.js/master/LICENSE
+    static exponent(value, power) {
+        if (power.real == 0 && power.imag == 0) {
+            return new this(1);
         }
 
-        return `${this.real}`;
+        if (power.imag == 0) {
+            if (value.real > 0 && value.imag == 0) {
+                return new this(Math.pow(value.real, power.real));
+            }
+
+            if (value.real == 0) {
+                switch (((power.real % 4) + 4) % 4) {
+                    case 0:
+                        return new this(Math.pow(value.imag, power.real), 0);
+
+                    case 1:
+                        return new this(0, Math.pow(value.imag, power.real));
+
+                    case 2:
+                        return new this(-Math.pow(value.imag, power.real), 0);
+
+                    case 3:
+                        return new this(0, -Math.pow(value.imag, power.real));
+                }
+            }
+        }
+
+        if (value.real == 0 && value.imag == 0 && power.real > 0 && power.imag >= 0) {
+            return new this(0);
+        }
+
+        var arg = Math.atan2(value.imag, value.real);
+        var loh = Math.log(Math.hypot(value.real, value.imag));
+        var coef = Math.exp((power.real * loh) - (power.imag * arg));
+        var trig = (power.imag * loh) + (power.real * arg);
+
+        return new this(
+            coef * Math.cos(trig),
+            coef * Math.sin(trig)
+        );
+    }
+
+    roundDecimals(realDecimals = 0, imagDecimals = 0) {
+        return new this.constructor(
+            Math.round(this.real * realDecimals) / realDecimals,
+            Math.round(this.imag * imagDecimals) / imagDecimals
+        );
+    }
+
+    roundPrecision(realPrecision = 0, imagPrecision = 0) {
+        return new this.constructor(
+            Number(this.real.toPrecision(realPrecision)),
+            Number(this.imag.toPrecision(imagPrecision))
+        );
+    }
+
+    toString() {
+        var output = this.roundPrecision(15, 15);
+
+        if (output.imag != 0) {
+            if (output.real != 0) {
+                if (output.imag < 0) {
+                    return `${output.real} - ${Math.abs(output.imag)}i`;
+                }
+    
+                return `${output.real} + ${output.imag}i`;
+            }
+    
+            return `${output.imag}i`;
+        }
+
+        return `${output.real}`;
     }
 }
 
@@ -132,6 +192,10 @@ export function register() {
     formulaic.registerOperator(implicitMultiplyOperator = new formulaic.BinaryOperator({
         "*": new formulaic.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b)))
     }));
+
+    formulaic.registerOperator(new formulaic.BinaryOperator({
+        "^": new formulaic.FunctionBinding("exponent", (a, b) => Promise.resolve(ComplexNumberType.exponent(a, b)))
+    }, false));
 
     formulaic.setImplicitOperator(implicitMultiplyOperator);
 
