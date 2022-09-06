@@ -90,7 +90,7 @@ export class ComplexNumberType {
         );
     }
 
-    roundPrecision(realPrecision = 0, imagPrecision = 0) {
+    roundPrecision(realPrecision = 15, imagPrecision = 15) {
         return new this.constructor(
             Number(this.real.toPrecision(realPrecision)),
             Number(this.imag.toPrecision(imagPrecision))
@@ -98,7 +98,7 @@ export class ComplexNumberType {
     }
 
     toString() {
-        var output = this.roundPrecision(15, 15);
+        var output = this.roundPrecision();
 
         if (output.imag != 0) {
             if (output.real != 0) {
