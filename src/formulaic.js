@@ -366,7 +366,7 @@ export class Engine {
     };
 
     Expression = ((engineScope) => class {
-        constructor(rootNode = new ExpressionNode()) {
+        constructor(rootNode = new engineScope.ExpressionNode()) {
             this.rootNode = rootNode;
         }
 
