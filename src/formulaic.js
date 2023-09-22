@@ -204,7 +204,7 @@ export class Engine {
         evaluate() {
             return Promise.reject("Base class not implemented");
         }
-    }
+    };
 
     ExpressionLiteral = class extends this.Entity {
         constructor(value) {
@@ -222,7 +222,7 @@ export class Engine {
         }
 
         reduceChildren() {}
-    }
+    };
 
     ExpressionNode = ((engineScope) => class extends this.Entity {
         constructor(children = [], referenceFunction = engineScope.DIRECT_FUNCTION) {
@@ -355,7 +355,7 @@ export class Engine {
             this.code = code;
             this.owner = owner;
         }
-    }
+    };
 
     LiteralToken = class extends this.Token {
         constructor(literalClass, code) {
@@ -363,7 +363,7 @@ export class Engine {
 
             this.literalClass = literalClass;
         }
-    }
+    };
 
     Expression = ((engineScope) => class {
         constructor(rootNode = new ExpressionNode()) {
