@@ -1,7 +1,5 @@
 import * as core from "../../src/core.js";
 
-core.register();
-
 window.addEventListener("load", function() {
     document.querySelector("#input").addEventListener("keydown", function(event) {
         if (event.key == "Enter") {

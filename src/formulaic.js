@@ -459,6 +459,20 @@ export class Engine {
         }
     })(this);
 
+    static merge(engines) {
+        var newEngine = new Engine();
+
+        engines.forEach(function(engine) {
+            newEngine.functions.push(...engine.functions);
+            newEngine.concepts.push(...engine.concepts);
+            newEngine.operators.push(...engine.operators);
+
+            newEngine.implicitOperatorToken ||= engine.implicitOperatorToken;
+        });
+
+        return newEngine;
+    }
+
     registerFunction(functionBinding) {
         this.functions.push(functionBinding);
     }
