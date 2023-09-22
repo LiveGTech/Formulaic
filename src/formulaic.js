@@ -199,6 +199,7 @@ export class Engine {
     concepts = [];
     operators = [];
     implicitOperatorToken = null;
+    unknownFunctionHandler = null;
 
     Entity = class {
         evaluate() {
@@ -271,7 +272,17 @@ export class Engine {
                         }
 
                         if (token.type == "call") {
-                            instance.children.push(engineScope.ExpressionNode.parseTokens(innerTokens, engineScope.functions.find((currentFunction) => currentFunction.name == functionName)));
+                            var matchedFunction = engineScope.functions.find((currentFunction) => currentFunction.name == functionName);
+
+                            if (!matchedFunction) {
+                                if (engineScope.unknownFunctionHandler != null) {
+                                    matchedFunction = engineScope.unknownFunctionHandler(functionName);
+                                } else {
+                                    throw new ReferenceError(`Unknown function: ${functionName}`);
+                                }
+                            }
+
+                            instance.children.push(engineScope.ExpressionNode.parseTokens(innerTokens, matchedFunction));
                         } else {
                             instance.children.push(engineScope.ExpressionNode.parseTokens(innerTokens));
                         }
@@ -343,7 +354,7 @@ export class Engine {
         evaluate() {
             var thisScope = this;
 
-            return Promise.all(this.children.map((child) => child.evaluate())).then(function(values) {            
+            return Promise.all(this.children.map((child) => child.evaluate())).then(function(values) {
                 return thisScope.referenceFunction.callback(...values);
             });
         }
@@ -468,6 +479,7 @@ export class Engine {
             newEngine.operators.push(...engine.operators);
 
             newEngine.implicitOperatorToken ||= engine.implicitOperatorToken;
+            newEngine.unknownFunctionHandler ||= engine.unknownFunctionHandler;
         });
 
         return newEngine;
@@ -487,5 +499,9 @@ export class Engine {
 
     setImplicitOperator(operator, code = Object.keys(operator.codeBindings)[0]) {
         this.implicitOperatorToken = new this.Token("operator", code, operator);
+    }
+
+    setUnknownFunctionHandler(handler) {
+        this.unknownFunctionHandler = handler;
     }
 }
