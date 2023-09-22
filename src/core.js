@@ -9,6 +9,8 @@
 
 import * as formulaic from "./formulaic.js";
 
+export var engine = new formulaic.Engine();
+
 export class ComplexNumberType {
     constructor(real, imag = 0) {
         this.real = real;
@@ -116,7 +118,7 @@ export class ComplexNumberType {
     }
 }
 
-export class NumberLiteral extends formulaic.ExpressionLiteral {
+export class NumberLiteral extends engine.ExpressionLiteral {
     static parse(code) {
         var value = "";
         var exponent = "";
@@ -132,7 +134,9 @@ export class NumberLiteral extends formulaic.ExpressionLiteral {
             } else if (code[i] == "-") {
                 negativeExponent = true;
             } else if (inExponent) {
-                if (code[i] == "+") {continue;}
+                if (code[i] == "+") {
+                    continue;
+                }
 
                 exponent += code[i];
             } else {
@@ -168,66 +172,64 @@ export class OctalIntegerLiteral extends NumberLiteral {
     }
 }
 
-export function register() {
-    var implicitMultiplyOperator;
+var implicitMultiplyOperator;
 
-    formulaic.registerOperator(new formulaic.BinaryOperator({
-        "+": new formulaic.FunctionBinding("add", (a, b) => Promise.resolve(ComplexNumberType.add(a, b))),
-        "-": new formulaic.FunctionBinding("subtract", (a, b) => Promise.resolve(ComplexNumberType.subtract(a, b)))
-    }));
+engine.registerOperator(new engine.BinaryOperator({
+    "+": new engine.FunctionBinding("add", (a, b) => Promise.resolve(ComplexNumberType.add(a, b))),
+    "-": new engine.FunctionBinding("subtract", (a, b) => Promise.resolve(ComplexNumberType.subtract(a, b)))
+}));
 
-    formulaic.registerOperator(new formulaic.BinaryOperator({
-        "*": new formulaic.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b))),
-        "/": new formulaic.FunctionBinding("divide", (a, b) => Promise.resolve(ComplexNumberType.divide(a, b)))
-    }));
+engine.registerOperator(new engine.BinaryOperator({
+    "*": new engine.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b))),
+    "/": new engine.FunctionBinding("divide", (a, b) => Promise.resolve(ComplexNumberType.divide(a, b)))
+}));
 
-    formulaic.registerOperator(new formulaic.UnaryOperator({
-        "+": formulaic.DIRECT_FUNCTION
-    }));
+engine.registerOperator(new engine.UnaryOperator({
+    "+": engine.DIRECT_FUNCTION
+}));
 
-    formulaic.registerOperator(new formulaic.UnaryOperator({
-        "-": new formulaic.FunctionBinding("negate", (value) => Promise.resolve(ComplexNumberType.subtract(new ComplexNumberType(0), value)))
-    }));
+engine.registerOperator(new engine.UnaryOperator({
+    "-": new engine.FunctionBinding("negate", (value) => Promise.resolve(ComplexNumberType.subtract(new ComplexNumberType(0), value)))
+}));
 
-    formulaic.registerOperator(implicitMultiplyOperator = new formulaic.BinaryOperator({
-        "*": new formulaic.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b)))
-    }));
+engine.registerOperator(implicitMultiplyOperator = new engine.BinaryOperator({
+    "*": new engine.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b)))
+}));
 
-    formulaic.registerOperator(new formulaic.BinaryOperator({
-        "^": new formulaic.FunctionBinding("exponent", (a, b) => Promise.resolve(ComplexNumberType.exponent(a, b)))
-    }, false));
+engine.registerOperator(new engine.BinaryOperator({
+    "^": new engine.FunctionBinding("exponent", (a, b) => Promise.resolve(ComplexNumberType.exponent(a, b)))
+}, false));
 
-    formulaic.setImplicitOperator(implicitMultiplyOperator);
+engine.setImplicitOperator(implicitMultiplyOperator);
 
-    formulaic.registerConcept(new (class extends formulaic.Concept {
-        match(code) {
-            var match;
+engine.registerConcept(new (class extends engine.Concept {
+    match(code) {
+        var match;
 
-            if (match = code.match(/^(0(?:x|X)[0-9a-fA-F]+)/)) {
-                return new formulaic.LiteralToken(HexadecimalIntegerLiteral, match[1]);
-            }
-
-            if (match = code.match(/^(0(?:b|B)[01]+)/)) {
-                return new formulaic.LiteralToken(BinaryIntegerLiteral, match[1]);
-            }
-
-            if (match = code.match(/^(0(?:o|O)[0-7]+)/)) {
-                return new formulaic.LiteralToken(OctalIntegerLiteral, match[1]);
-            }
-    
-            if (match = code.match(/^((?:[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)(?:[eE][+-]?[0-9]+)?i?)/)) {
-                return new formulaic.LiteralToken(NumberLiteral, match[1]);
-            }
-    
-            return null;
-        }
-    })());
-    
-    formulaic.registerFunction(new formulaic.FunctionBinding("sqrt", function(value) {
-        if (value < 0) {
-            return Promise.resolve(new ComplexNumberType(0, Math.sqrt(Math.abs(value))));
+        if (match = code.match(/^(0(?:x|X)[0-9a-fA-F]+)/)) {
+            return new engine.LiteralToken(HexadecimalIntegerLiteral, match[1]);
         }
 
-        return Promise.resolve(new ComplexNumberType(Math.sqrt(value)));
-    }));
-}
+        if (match = code.match(/^(0(?:b|B)[01]+)/)) {
+            return new engine.LiteralToken(BinaryIntegerLiteral, match[1]);
+        }
+
+        if (match = code.match(/^(0(?:o|O)[0-7]+)/)) {
+            return new engine.LiteralToken(OctalIntegerLiteral, match[1]);
+        }
+
+        if (match = code.match(/^((?:[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)(?:[eE][+-]?[0-9]+)?i?)/)) {
+            return new engine.LiteralToken(NumberLiteral, match[1]);
+        }
+
+        return null;
+    }
+})());
+
+engine.registerFunction(new engine.FunctionBinding("sqrt", function(value) {
+    if (value < 0) {
+        return Promise.resolve(new ComplexNumberType(0, Math.sqrt(Math.abs(value))));
+    }
+
+    return Promise.resolve(new ComplexNumberType(Math.sqrt(value)));
+}));
