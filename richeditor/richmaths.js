@@ -73,7 +73,7 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
         richEditor.FormulaicAtomSyntax() (" sqrt("),
         c.TextFragment({
             styles: {
-                "border-top": "1em solid var(--secondaryText)"
+                "border-top": "0.1em solid var(--secondaryText)"
             }
         }) (
             argSlot,
