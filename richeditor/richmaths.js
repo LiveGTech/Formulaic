@@ -56,11 +56,7 @@ var FractionAtom = astronaut.component("FractionAtom", function(props, children)
 });
 
 var RootAtom = astronaut.component("RootAtom", function(props, children) {
-    var argSlot = richEditor.FormulaicAtomSlot({
-        styles: {
-            "border-top": "1px solid var(--secondaryText)"
-        }
-    }) ();
+    var argSlot = richEditor.FormulaicAtomSlot() ();
 
     var rootSymbol = richEditor.FormulaicAtomNonSyntax() ("√");
 
@@ -68,12 +64,20 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
         styles: {
             "display": "inline-flex",
             "vertical-align": "middle",
-            "align-items": "center"
+            "align-items": "center",
+            "margin-top": "1px",
+            "margin-bottom": "3px"
         }
     }) (
         rootSymbol,
         richEditor.FormulaicAtomSyntax() (" sqrt("),
-        argSlot,
+        c.TextFragment({
+            styles: {
+                "border-top": "1px solid var(--secondaryText)"
+            }
+        }) (
+            argSlot,
+        ),
         richEditor.FormulaicAtomSyntax() (")")
     );
 

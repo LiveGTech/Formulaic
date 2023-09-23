@@ -43,8 +43,11 @@ const SLOT_STYLES = new astronaut.StyleGroup([
     }),
     new astronaut.StyleSet({
         "min-width": "0.5em",
-        "background-color": "grey",
+        "background-color": "rgba(0, 0, 0, 0.2)",
         "border-radius": "0.2rem"
+    }, ":empty"),
+    new astronaut.MediaQueryStyleSet("prefers-color-scheme: dark", {
+        "background-color": "rgba(255, 255, 255, 0.2)"
     }, ":empty")
 ]);
 
