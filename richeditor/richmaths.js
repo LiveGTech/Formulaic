@@ -40,7 +40,7 @@ var FractionAtom = astronaut.component("FractionAtom", function(props, children)
         c.TextFragment({
             styles: {
                 "height": "0",
-                "border-top": "1px solid var(--secondaryText)",
+                "border-top": "0.1em solid var(--secondaryText)",
                 "overflow": "hidden",
                 "white-space": "nowrap",
                 "text-indent": "100%"
@@ -65,8 +65,8 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
             "display": "inline-flex",
             "vertical-align": "middle",
             "align-items": "center",
-            "margin-top": "1px",
-            "margin-bottom": "3px"
+            "margin-top": "0.1em",
+            "margin-bottom": "0.3em"
         }
     }) (
         rootSymbol,
