@@ -64,8 +64,10 @@ const SLOT_STYLES = new astronaut.StyleGroup([
 
 export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", function(props, children, inter) {
     var editor = c.Container({
-        styleSets: [EDITOR_STYLES, ...(!props.inline ? [INPUT_EDITOR_STYLES] : [INLINE_EDITOR_STYLES])],
+        ...(props || {}),
+        styleSets: [...(props.styleSets || []), EDITOR_STYLES, ...(!props.inline ? [INPUT_EDITOR_STYLES] : [INLINE_EDITOR_STYLES])],
         attributes: {
+            ...(props.attributes || {}),
             "contenteditable": "true"
         }
     }) ();
