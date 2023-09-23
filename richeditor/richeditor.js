@@ -16,13 +16,24 @@ const c = astronaut.components;
 
 const EDITOR_STYLES = new astronaut.StyleGroup([
     new astronaut.StyleSet({
+        "outline": "none"
+    })
+]);
+
+const INPUT_EDITOR_STYLES = new astronaut.StyleGroup([
+    new astronaut.StyleSet({
         "margin-top": "0.2rem",
         "margin-bottom": "0.2rem",
         "padding": "0.5rem",
         "background-color": "var(--secondaryBackground)",
         "color": "var(--secondaryText)",
-        "border-radius": "0.5rem",
-        "outline": "none"
+        "border-radius": "0.5rem"
+    })
+]);
+
+const INLINE_EDITOR_STYLES = new astronaut.StyleGroup([
+    new astronaut.StyleSet({
+        "display": "inline-block"
     })
 ]);
 
@@ -53,7 +64,7 @@ const SLOT_STYLES = new astronaut.StyleGroup([
 
 export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", function(props, children, inter) {
     var editor = c.Container({
-        styleSets: [EDITOR_STYLES],
+        styleSets: [EDITOR_STYLES, ...(!props.inline ? [INPUT_EDITOR_STYLES] : [INLINE_EDITOR_STYLES])],
         attributes: {
             "contenteditable": "true"
         }
