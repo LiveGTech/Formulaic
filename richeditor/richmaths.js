@@ -16,6 +16,26 @@ var astronaut = format.astronaut;
 
 const c = astronaut.components;
 
+var BracketAtom = astronaut.component("BracketAtom", function(props, children) {
+    var atom = richEditor.FormulaicAtom() (
+        richEditor.FormulaicAtomNonSyntax() (props.isClosing ? ")" : "("),
+        richEditor.FormulaicAtomSyntax() (props.isClosing ? " ) " : " ( ")
+    );
+
+    new ResizeObserver(function() {
+        var normalHeight = atom.get().clientHeight;
+        var desiredHeight = props.parent.get().clientHeight;
+        var containerComputedStyles = getComputedStyle(props.parent.get());
+
+        desiredHeight -= parseFloat(containerComputedStyles.paddingTop || 0);
+        desiredHeight -= parseFloat(containerComputedStyles.paddingBottom || 0);
+
+        atom.setStyle("transform", `scaleY(${desiredHeight / normalHeight})`);
+    }).observe(props.parent.get());
+
+    return atom;
+});
+
 var FractionAtom = astronaut.component("FractionAtom", function(props, children) {
     var numeratorSlot = richEditor.FormulaicAtomSlot({
         styles: {
@@ -96,6 +116,9 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
 });
 
 export var atoms = {
+    BracketAtom: new format.Atom(function(context) {
+        return BracketAtom({parent: context.parent, isClosing: context.match[0] == ")"}) ();
+    }, /[()]$/),
     fraction: new format.Atom(function(context) {
         return FractionAtom({numerator: context.match[2]}) ();
     }, /(([^+]*)\/)$/),

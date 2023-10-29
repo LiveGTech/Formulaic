@@ -171,7 +171,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         var previousText = range.toString();
         var matchedAtom = null;
         var matchedText = null;
-        var context = {};
+        var context = {editor};
 
         props.format.atoms.forEach(function(atom) {
             if (atom.shorthandMatch == null || matchedAtom != null) {
@@ -202,6 +202,8 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         if (matchedText == null) {
             return false;
         }
+
+        context.parent = $g.sel(range.endContainer.parentElement);
 
         var matchStart = range.endContainer.textContent.lastIndexOf(matchedText);
         var matchEnd = matchStart + matchedText.length;
@@ -340,6 +342,10 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
             var lastChild = range.endContainer.lastChild;
 
             if (lastChild.nodeType == Node.TEXT_NODE && lastChild.textContent == "") {
+                lastChild = lastChild.previousSibling;
+            }
+
+            while (range.comparePoint(lastChild, 0) != -1) {
                 lastChild = lastChild.previousSibling;
             }
 
