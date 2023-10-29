@@ -31,7 +31,9 @@ var FractionAtom = astronaut.component("FractionAtom", function(props, children)
         styles: {
             "display": "inline-flex",
             "flex-direction": "column",
-            "vertical-align": "middle"
+            "vertical-align": "middle",
+            "margin-left": "0.1em",
+            "margin-right": "0.1em"
         }
     }) (
         richEditor.FormulaicAtomSyntax() ("(("),
@@ -73,7 +75,9 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
         richEditor.FormulaicAtomSyntax() (" sqrt("),
         c.TextFragment({
             styles: {
-                "border-top": "0.1em solid var(--secondaryText)"
+                "border-top": "0.1em solid var(--secondaryText)",
+                "margin-inline-end": "0.1em",
+                "padding-inline-end": "0.1em"
             }
         }) (
             argSlot,
@@ -91,10 +95,15 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
     return atom;
 });
 
-format.registerAtom(new format.Atom(function(context) {
-    return FractionAtom({numerator: context.match[2]}) ();
-}, /(([^+]*)\/)$/));
+export var atoms = {
+    fraction: new format.Atom(function(context) {
+        return FractionAtom({numerator: context.match[2]}) ();
+    }, /(([^+]*)\/)$/),
+    squareRoot: new format.Atom(function(context) {
+        return RootAtom() ();
+    }, "sqrt")
+};
 
-format.registerAtom(new format.Atom(function(context) {
-    return RootAtom() ();
-}, "sqrt"));
+Object.values(atoms).forEach(function(atom) {
+    format.registerAtom(atom);
+});

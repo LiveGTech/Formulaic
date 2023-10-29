@@ -16,6 +16,7 @@ $g.waitForLoad().then(function() {
     }) ();
 
     var calculateButton = Button() ("Calculate");
+    var insertFractionButton = Button("secondary") ("Insert fraction");
     var resultReadout = Paragraph() ();
 
     editor.on("input keyup", function() {
@@ -32,6 +33,12 @@ $g.waitForLoad().then(function() {
         });
     });
 
+    insertFractionButton.on("click", function(event) {
+        editor.inter.insertText("/");
+
+        event.preventDefault();
+    })
+
     astronaut.render(
         Section (
             Heading() ("Formulaic Formula Editor Demo"),
@@ -41,7 +48,8 @@ $g.waitForLoad().then(function() {
                 linearExpression
             ),
             ButtonRow (
-                calculateButton
+                calculateButton,
+                insertFractionButton
             ),
             resultReadout
         )

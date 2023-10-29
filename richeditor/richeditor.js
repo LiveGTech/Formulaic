@@ -16,7 +16,8 @@ const c = astronaut.components;
 
 const EDITOR_STYLES = new astronaut.StyleGroup([
     new astronaut.StyleSet({
-        "outline": "none"
+        "outline": "none",
+        "caret-color": "transparent"
     })
 ]);
 
@@ -63,6 +64,12 @@ const SLOT_STYLES = new astronaut.StyleGroup([
 ]);
 
 export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", function(props, children, inter) {
+    var editorContainer = c.Container({
+        styles: {
+            "position": "relative"
+        }
+    }) ();
+
     var editor = c.Container({
         ...(props || {}),
         styleSets: [...(props.styleSets || []), EDITOR_STYLES, ...(!props.inline ? [INPUT_EDITOR_STYLES] : [INLINE_EDITOR_STYLES])],
@@ -72,87 +79,82 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         }
     }) ();
 
-    inter.insertAtom = function(atom) {
+    var caret = c.Container({
+        styles: {
+            "position": "absolute",
+            "width": "1px"
+        }
+    }) ();
+
+    caret.hide();
+
+    editorContainer.add(editor, caret);
+
+    function expandAtomSelectionTowardsStart(thenDelete = false) {
         var selection = document.getSelection();
-
-        if (selection.rangeCount == 0) {
-            return;
-        }
-
         var range = selection.getRangeAt(0);
-        var generatedAtom = atom.generator();
 
-        range.deleteContents();
-        range.insertNode(generatedAtom.get());
-    };
+        if (
+            (range.startOffset == 0 || (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed)) &&
+            selection.anchorNode == range.endContainer && selection.anchorOffset == range.endOffset
+        ) {
+            var atomBefore = range.startContainer.previousElementSibling;
 
-    inter.getExpression = function() {
-        var copy = editor.copy();
-
-        copy.find(".formulaic_nonSyntax").remove();
-
-        return copy.getText();
-    };
-
-    editor.on("keydown", function(event) {
-        if ((event.key == "ArrowLeft" && event.shiftKey) || event.key == "Backspace") {
-            var selection = document.getSelection();
-            var range = selection.getRangeAt(0);
-
-            if (
-                (range.startOffset == 0 || (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed)) &&
-                selection.anchorNode == range.endContainer && selection.anchorOffset == range.endOffset
-            ) {
-                var atomBefore = range.startContainer.previousElementSibling;
-
-                if (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed) {
-                    atomBefore = selection.anchorNode.querySelector(".formulaic_atom:last-child");
-                }
-
-                if (!atomBefore || !editor.get().contains(atomBefore)) {
-                    return;
-                }
-
-                range.setStartBefore(atomBefore);
-
-                selection.setBaseAndExtent(range.endContainer, range.endOffset, range.startContainer, range.startOffset);
-
-                event.preventDefault();
-
-                if (event.key == "Backspace") {
-                    selection.deleteFromDocument();
-                }
+            if (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed) {
+                atomBefore = selection.anchorNode.querySelector(".formulaic_atom:last-child");
             }
+
+            if (!atomBefore || !editor.get().contains(atomBefore)) {
+                return false;
+            }
+
+            range.setStartBefore(atomBefore);
+
+            selection.setBaseAndExtent(range.endContainer, range.endOffset, range.startContainer, range.startOffset);
+
+            if (thenDelete) {
+                selection.deleteFromDocument();
+            }
+
+            return true;
         }
 
-        if (event.key == "ArrowRight" && event.shiftKey) {
-            var selection = document.getSelection();
-            var range = selection.getRangeAt(0);
+        return false;
+    };
 
-            if (
-                (range.endOffset == range.endContainer.textContent.length || (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed)) &&
-                selection.anchorNode == range.startContainer && selection.anchorOffset == range.startOffset
-            ) {
-                var atomAfter = range.endContainer.nextElementSibling;
+    function expandAtomSelectionTowardsEnd(thenDelete = false) {
+        var selection = document.getSelection();
+        var range = selection.getRangeAt(0);
 
-                if (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed) {
-                    atomAfter = selection.anchorNode.querySelector(".formulaic_atom:first-child");
-                }
+        if (
+            (range.endOffset == range.endContainer.textContent.length || (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed)) &&
+            selection.anchorNode == range.startContainer && selection.anchorOffset == range.startOffset
+        ) {
+            var atomAfter = range.endContainer.nextElementSibling;
 
-                if (!atomAfter) {
-                    return;
-                }
-
-                range.setEndAfter(atomAfter);
-
-                selection.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset);
-
-                event.preventDefault();
+            if (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed) {
+                atomAfter = selection.anchorNode.querySelector(".formulaic_atom:first-child");
             }
-        }
-    });
 
-    editor.on("input", function(event) {
+            if (!atomAfter) {
+                return false;
+            }
+
+            range.setEndAfter(atomAfter);
+
+            selection.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset);
+
+            if (thenDelete) {
+                selection.deleteFromDocument();
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    function applyAtoms() {
         var selection = document.getSelection();
 
         if (selection.rangeCount == 0) {
@@ -171,14 +173,14 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
 
         props.format.atoms.forEach(function(atom) {
             if (atom.shorthandMatch == null || matchedAtom != null) {
-                return;
+                return false;
             }
 
             if (atom.shorthandMatch instanceof RegExp) {
                 var match = previousText.match(atom.shorthandMatch);
 
                 if (!match) {
-                    return;
+                    return false;
                 }
 
                 context.match = match;
@@ -186,7 +188,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
                 matchedText = match[1] || match[0];
             } else {
                 if (!previousText.endsWith(atom.shorthandMatch)) {
-                    return;
+                    return false;
                 }
 
                 matchedText = atom.shorthandMatch;
@@ -196,7 +198,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         });
 
         if (matchedText == null) {
-            return;
+            return false;
         }
 
         var matchStart = range.endContainer.textContent.lastIndexOf(matchedText);
@@ -222,12 +224,156 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         selection.removeAllRanges();
         selection.addRange(range);
 
-        event.preventDefault();
+        return true;
+    }
+
+    inter.insertAtom = function(atom, context) {
+        var selection = document.getSelection();
+
+        if (selection.rangeCount == 0) {
+            return;
+        }
+
+        var range = selection.getRangeAt(0);
+        var generatedAtom = atom.generator(context);
+
+        range.deleteContents();
+        range.insertNode(generatedAtom.get());
+    };
+
+    inter.insertText = function(text) {
+        document.execCommand("insertText", false, text);
+
+        applyAtoms();
+    };
+
+    inter.getExpression = function() {
+        var copy = editor.copy();
+
+        copy.find(".formulaic_nonSyntax").remove();
+
+        return copy.getText();
+    };
+
+    inter.deleteTowardsStart = function() {
+        if (!expandAtomSelectionTowardsStart(true)) {
+            document.execCommand("delete");
+        }
+    };
+
+    inter.deleteTowardsEnd = function() {
+        if (!expandAtomSelectionTowardsEnd(true)) {
+            document.execCommand("forwardDelete");
+        }
+    };
+
+    editor.on("keydown", function(event) {
+        if ((event.key == "ArrowLeft" && event.shiftKey) || event.key == "Backspace") {
+            if (expandAtomSelectionTowardsStart(event.key == "Backspace")) {
+                event.preventDefault();
+            }
+        }
+
+        if ((event.key == "ArrowRight" && event.shiftKey) || event.key == "Delete") {
+            if (expandAtomSelectionTowardsEnd(event.key == "Delete")) {
+                event.preventDefault();
+            }
+        }
+    });
+
+    editor.on("input", function(event) {
+        if (applyAtoms()) {
+            event.preventDefault();
+        }
     });
 
     editor.setText("1+1");
 
-    return editor;
+    var caretSelectStartAt = null;
+
+    requestAnimationFrame(function updateCaret() {
+        requestAnimationFrame(updateCaret);
+
+        if (document.activeElement != editor.get() && !editor.get().contains(document.activeElement)) {
+            caret.hide();
+
+            caretSelectStartAt = null;
+
+            return;
+        }
+
+        var selection = document.getSelection();
+        var range = selection.getRangeAt(0);
+
+        if (!range || !selection.isCollapsed) {
+            caret.hide();
+
+            return;
+        }
+
+        if (editor.getText() == "") {
+            caret.hide();
+            editor.setStyle("caret-color", "unset");
+
+            return;
+        } else {
+            editor.setStyle("caret-color", "transparent");
+        }
+
+        if (caretSelectStartAt == null) {
+            caretSelectStartAt = Date.now();
+        }
+
+        var rangeBoundingBox = range.getBoundingClientRect();
+        var parentBoundingBox = editorContainer.get().getBoundingClientRect();
+
+        if (range.startContainer != editor.get() && range.startContainer.childNodes.length == 0 && range.startContainer.nodeType == Node.ELEMENT_NODE) {
+            rangeBoundingBox = range.startContainer.getBoundingClientRect();
+        }
+
+        var caretTop = rangeBoundingBox.top - parentBoundingBox.top;
+        var caretLeft = rangeBoundingBox.left - parentBoundingBox.left;
+
+        if (range.startContainer.nodeType == Node.ELEMENT_NODE && range.startOffset > 0) {
+            var lastChild = range.endContainer.lastChild;
+
+            if (lastChild.nodeType == Node.TEXT_NODE && lastChild.textContent == "") {
+                lastChild = lastChild.previousSibling;
+            }
+
+            if (lastChild.nodeType == Node.ELEMENT_NODE) {
+                rangeBoundingBox = range.endContainer.querySelector(":scope > *:last-child").getBoundingClientRect();
+                caretLeft = rangeBoundingBox.left + rangeBoundingBox.width - parentBoundingBox.left;
+            } else {
+                range.setStart(lastChild, lastChild.textContent.length);
+                range.setEnd(lastChild, lastChild.textContent.length);
+
+                caretLeft = rangeBoundingBox.left - parentBoundingBox.left;
+            }
+
+            caretTop = rangeBoundingBox.top - parentBoundingBox.top;
+        }
+
+        if (range.startOffset == 0 && range.startContainer.previousSibling?.nodeType == Node.TEXT_NODE && range.startContainer.previousSibling.textContent == "") {
+            rangeBoundingBox = range.startContainer.previousElementSibling.getBoundingClientRect();
+
+            caretTop = rangeBoundingBox.top - parentBoundingBox.top;
+            caretLeft = rangeBoundingBox.left + rangeBoundingBox.width - parentBoundingBox.left;
+        }
+
+        caret.setStyle("top", `${caretTop}px`);
+        caret.setStyle("left", `${caretLeft}px`);
+        caret.setStyle("height", `${rangeBoundingBox.height}px`);
+        caret.setStyle("background-color", getComputedStyle(editor.get()).color);
+
+        if ((Date.now() - caretSelectStartAt) % 1000 < 500) {
+            caret.show();
+        } else {
+            caret.hide();
+        }
+    });
+
+    return editorContainer;
 });
 
 export var FormulaicAtom = astronaut.component("FormulaicAtom", function(props, children) {
