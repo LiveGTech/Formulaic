@@ -90,6 +90,8 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
 
     editorContainer.add(editor, caret);
 
+    var caretSelectStartAt = null;
+
     function expandAtomSelectionTowardsStart(thenDelete = false) {
         var selection = document.getSelection();
         var range = selection.getRangeAt(0);
@@ -279,6 +281,8 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
                 event.preventDefault();
             }
         }
+
+        caretSelectStartAt = Date.now();
     });
 
     editor.on("input", function(event) {
@@ -288,8 +292,6 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
     });
 
     editor.setText("1+1");
-
-    var caretSelectStartAt = null;
 
     requestAnimationFrame(function updateCaret() {
         requestAnimationFrame(updateCaret);
