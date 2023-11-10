@@ -77,9 +77,26 @@ var FractionAtom = astronaut.component("FractionAtom", function(props, children)
     );
 });
 
+var ExponentAtom = astronaut.component("PowerAtom", function(props, children) {
+    var baseSlot = richEditor.FormulaicAtomSlot() ();
+
+    if (props.base) {
+        baseSlot.setText(props.base);
+    }
+
+    return richEditor.FormulaicAtom() (
+        richEditor.FormulaicAtomSyntax() ("(("),
+        baseSlot,
+        richEditor.FormulaicAtomSyntax() (")^("),
+        c.ElementNode("sup") (            
+            richEditor.FormulaicAtomSlot() (),
+        ),
+        richEditor.FormulaicAtomSyntax() ("))")
+    );
+});
+
 var RootAtom = astronaut.component("RootAtom", function(props, children) {
     var argSlot = richEditor.FormulaicAtomSlot() ();
-
     var rootSymbol = richEditor.FormulaicAtomNonSyntax() ("√");
 
     var atom = richEditor.FormulaicAtom({
@@ -118,16 +135,19 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
 export var atoms = {
     multiplyOperator: new format.Atom(function(context) {
         return Text("×");
-    }, /\*$/),
+    }, "*"),
     divideOperator: new format.Atom(function(context) {
         return Text("÷");
-    }, /\/$/),
+    }, "/"),
     bracket: new format.Atom(function(context) {
         return BracketAtom({parent: context.parent, isClosing: context.match[0] == ")"}) ();
     }, /[()]$/),
     fraction: new format.Atom(function(context) {
         return FractionAtom({numerator: context.match[2]}) ();
     }, /(([^+\-*/×÷]*)over)$/),
+    exponent: new format.Atom(function(context) {
+        return ExponentAtom({base: context.match[2]}) ();
+    }, /(([^+\-*/×÷]*)\^)$/),
     squareRoot: new format.Atom(function(context) {
         return RootAtom() ();
     }, "sqrt")
