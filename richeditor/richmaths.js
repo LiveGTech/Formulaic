@@ -91,6 +91,9 @@ var PowerAtom = astronaut.component("PowerAtom", function(props, children) {
         c.ElementNode("sup", {
             // TODO: This style for superscripts and subscripts should really be in Adapt UI
             styles: {
+                "display": "inline-block",
+                "margin-bottom": "1em",
+                "vertical-align": "bottom",
                 "font-size": "0.6em"
             }
         }) (            
