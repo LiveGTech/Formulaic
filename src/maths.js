@@ -172,6 +172,8 @@ export class OctalIntegerLiteral extends NumberLiteral {
     }
 }
 
+var multiplyOperator = new engine.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b)));
+var divideOperator = new engine.FunctionBinding("divide", (a, b) => Promise.resolve(ComplexNumberType.divide(a, b)));
 var implicitMultiplyOperator;
 
 engine.registerOperator(new engine.BinaryOperator({
@@ -180,8 +182,10 @@ engine.registerOperator(new engine.BinaryOperator({
 }));
 
 engine.registerOperator(new engine.BinaryOperator({
-    "*": new engine.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b))),
-    "/": new engine.FunctionBinding("divide", (a, b) => Promise.resolve(ComplexNumberType.divide(a, b)))
+    "*": multiplyOperator,
+    "×": multiplyOperator,
+    "/": divideOperator,
+    "÷": divideOperator
 }));
 
 engine.registerOperator(new engine.UnaryOperator({

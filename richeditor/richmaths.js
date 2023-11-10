@@ -116,12 +116,18 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
 });
 
 export var atoms = {
-    BracketAtom: new format.Atom(function(context) {
+    multiplyOperator: new format.Atom(function(context) {
+        return Text("×");
+    }, /\*$/),
+    divideOperator: new format.Atom(function(context) {
+        return Text("÷");
+    }, /\/$/),
+    bracket: new format.Atom(function(context) {
         return BracketAtom({parent: context.parent, isClosing: context.match[0] == ")"}) ();
     }, /[()]$/),
     fraction: new format.Atom(function(context) {
         return FractionAtom({numerator: context.match[2]}) ();
-    }, /(([^+]*)\/)$/),
+    }, /(([^+\-*/×÷]*)over)$/),
     squareRoot: new format.Atom(function(context) {
         return RootAtom() ();
     }, "sqrt")
