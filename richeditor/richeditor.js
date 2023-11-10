@@ -77,7 +77,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
             ...(props.attributes || {}),
             "contenteditable": "true"
         }
-    }) ();
+    }) (...children);
 
     var caret = c.Container({
         styles: {
@@ -292,8 +292,6 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
             event.preventDefault();
         }
     });
-
-    editor.setText("1+1");
 
     requestAnimationFrame(function updateCaret() {
         requestAnimationFrame(updateCaret);
