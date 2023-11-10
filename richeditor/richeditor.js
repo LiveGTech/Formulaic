@@ -231,6 +231,10 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         return true;
     }
 
+    inter.getEditorArea = function() {
+        return editor;
+    };
+
     inter.insertAtom = function(atom, context) {
         var selection = document.getSelection();
 
@@ -243,6 +247,10 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
 
         range.deleteContents();
         range.insertNode(generatedAtom.get());
+    };
+
+    inter.clear = function() {
+        editor.clear();
     };
 
     inter.insertText = function(text) {
