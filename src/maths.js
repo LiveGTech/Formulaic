@@ -103,12 +103,30 @@ export class ComplexNumberType {
         var output = this.roundPrecision();
 
         if (output.imag != 0) {
+            var imag = output.imag;
+
             if (output.real != 0) {
                 if (output.imag < 0) {
-                    return `${output.real} - ${Math.abs(output.imag)}i`;
+                    imag *= -1;
+
+                    if (imag == 1) {
+                        imag = "";
+                    }
+
+                    return `${output.real} - ${imag}i`;
                 }
-    
+  
+                if (imag == 1) {
+                    imag = "";
+                }
+
                 return `${output.real} + ${output.imag}i`;
+            }
+
+            if (imag == 1) {
+                imag = "";
+            } else if (imag == -1) {
+                imag = "-";
             }
     
             return `${output.imag}i`;
