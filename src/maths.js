@@ -263,3 +263,51 @@ engine.registerFunction(new engine.FunctionBinding("sqrt", function(value) {
 
     return Promise.resolve(new ComplexNumberType(Math.sqrt(value)));
 }));
+
+engine.registerFunction(new engine.FunctionBinding("sin", function(value) {
+    return Promise.resolve(new ComplexNumberType(
+        Math.sin(value.real) * Math.cosh(value.imag),
+        Math.cos(value.real) * Math.sinh(value.imag)
+    ));
+}));
+
+engine.registerFunction(new engine.FunctionBinding("cos", function(value) {
+    return Promise.resolve(new ComplexNumberType(
+        Math.cos(value.real) * Math.cosh(value.imag),
+        Math.sin(value.real) * Math.sinh(value.imag)
+    ));
+}));
+
+engine.registerFunction(new engine.FunctionBinding("tan", function(value) {
+    var numerator = new ComplexNumberType(Math.tan(value.real) + Math.tanh(value.imag));
+    var denominatorPart = new ComplexNumberType(0, Math.tan(value.real) * Math.tanh(value.imag));
+
+    return Promise.resolve(ComplexNumberType.divide(
+        numerator,
+        ComplexNumberType.subtract(new ComplexNumberType(1), denominatorPart)
+    ));
+}));
+
+engine.registerFunction(new engine.FunctionBinding("sinh", function(value) {
+    return Promise.resolve(new ComplexNumberType(
+        Math.sinh(value.real) * Math.cos(value.imag),
+        Math.cosh(value.real) * Math.sin(value.imag)
+    ));
+}));
+
+engine.registerFunction(new engine.FunctionBinding("cosh", function(value) {
+    return Promise.resolve(new ComplexNumberType(
+        Math.cosh(value.real) * Math.cos(value.imag),
+        Math.sinh(value.real) * Math.sin(value.imag)
+    ));
+}));
+
+engine.registerFunction(new engine.FunctionBinding("tanh", function(value) {
+    var numerator = new ComplexNumberType(Math.tanh(value.real) + Math.tan(value.imag));
+    var denominatorPart = new ComplexNumberType(0, Math.tanh(value.real) * Math.tan(value.imag));
+
+    return Promise.resolve(ComplexNumberType.divide(
+        numerator,
+        ComplexNumberType.add(new ComplexNumberType(1), denominatorPart)
+    ));
+}));
