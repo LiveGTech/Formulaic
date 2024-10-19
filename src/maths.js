@@ -120,7 +120,7 @@ export class ComplexNumberType {
                     imag = "";
                 }
 
-                return `${output.real} + ${output.imag}i`;
+                return `${output.real} + ${imag}i`;
             }
 
             if (imag == 1) {
@@ -129,7 +129,7 @@ export class ComplexNumberType {
                 imag = "-";
             }
     
-            return `${output.imag}i`;
+            return `${imag}i`;
         }
 
         return `${output.real}`;
