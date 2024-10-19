@@ -75,7 +75,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         styleSets: [...(props.styleSets || []), EDITOR_STYLES, ...(!props.inline ? [INPUT_EDITOR_STYLES] : [INLINE_EDITOR_STYLES])],
         attributes: {
             ...(props.attributes || {}),
-            "contenteditable": "true"
+            "contenteditable": "plaintext-only"
         }
     }) (...children);
 
@@ -408,7 +408,7 @@ export var FormulaicAtomSlot = astronaut.component("FormulaicAtomSlot", function
         classes: [...(props.classes || []), "formulaic_atomSlot"],
         attributes: {
             ...(props.attributes || {}),
-            "contenteditable": "true",
+            "contenteditable": "plaintext-only",
         },
         styleSets: [...(props.styleSets || []), SLOT_STYLES]
     }) (...children);
