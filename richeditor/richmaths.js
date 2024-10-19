@@ -89,21 +89,17 @@ var PowerAtom = astronaut.component("PowerAtom", function(props, children) {
         exponentSlot.setText(props.exponent);
     }
 
-    return richEditor.FormulaicAtom() (
+    return richEditor.FormulaicAtom (
         richEditor.FormulaicAtomSyntax() ("(("),
         baseSlot,
         richEditor.FormulaicAtomSyntax() (")^("),
         c.ElementNode("sup", {
             // TODO: This style for superscripts and subscripts should really be in Adapt UI
             styles: {
-                "display": "inline-block",
-                "margin-bottom": "1em",
-                "vertical-align": "bottom",
+                "transform": "translateY(-50%)",
                 "font-size": "0.6em"
             }
-        }) (            
-            exponentSlot
-        ),
+        }) (exponentSlot),
         richEditor.FormulaicAtomSyntax() ("))")
     );
 });
@@ -174,6 +170,47 @@ var AbsAtom = astronaut.component("AbsAtom", function(props, children) {
     return atom;
 });
 
+var LogabAtom = astronaut.component("LogabAtom", function(props, children) {
+    var aSlot = richEditor.FormulaicAtomSlot() ();
+    var bSlot = richEditor.FormulaicAtomSlot() ();
+    var openingBracket = richEditor.FormulaicAtomNonSyntax() ("(");
+    var closingBracket = richEditor.FormulaicAtomNonSyntax() (")");
+
+    var atom = richEditor.FormulaicAtom({
+        styles: {
+            "display": "inline-flex",
+            "vertical-align": "middle",
+            "align-items": "center"
+        }
+    }) (
+        richEditor.FormulaicAtomNonSyntax() ("log"),
+        richEditor.FormulaicAtomSyntax() (" logab("),
+        c.ElementNode("sub", {
+            // TODO: This style for superscripts and subscripts should really be in Adapt UI
+            styles: {
+                "transform": "translateY(50%)",
+                "font-size": "0.6em"
+            }
+        }) (aSlot),
+        openingBracket,
+        richEditor.FormulaicAtomSyntax() (", "),
+        bSlot,
+        closingBracket,
+        richEditor.FormulaicAtomSyntax() (")")
+    );
+
+    new ResizeObserver(function() {
+        var normalHeight = openingBracket.get().clientHeight;
+        var desiredHeight = atom.get().clientHeight + 2;
+
+        [openingBracket, closingBracket].forEach(function(bar) {
+            bar.setStyle("transform", `scaleY(${desiredHeight / normalHeight})`);
+        });
+    }).observe(atom.get());
+
+    return atom;
+});
+
 export var atoms = {
     multiplyOperator: new format.Atom(function(context) {
         return Text("×");
@@ -195,7 +232,10 @@ export var atoms = {
     }, "sqrt"),
     abs: new format.Atom(function(context) {
         return AbsAtom() ();
-    }, "abs")
+    }, "abs"),
+    logab: new format.Atom(function(context) {
+        return LogabAtom() ();
+    }, "logab")
 };
 
 [

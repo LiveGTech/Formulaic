@@ -121,8 +121,8 @@ export class ComplexNumberType {
 
     static logab(a, b) {
         return this.divide(
-            this.ln(a),
-            this.ln(b)
+            this.ln(b),
+            this.ln(a)
         );
     }
 
