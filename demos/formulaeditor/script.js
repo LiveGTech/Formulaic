@@ -17,6 +17,7 @@ $g.waitForLoad().then(function() {
 
     var calculateButton = Button() ("Calculate");
     var insertFractionButton = Button("secondary") ("Insert fraction");
+    var insertSquareButton = Button("secondary") ("Insert square");
     var resultReadout = Paragraph() ();
 
     editor.on("input keyup", function() {
@@ -34,10 +35,16 @@ $g.waitForLoad().then(function() {
     });
 
     insertFractionButton.on("click", function(event) {
-        editor.inter.insertText("/");
+        editor.inter.insertText("over");
 
         event.preventDefault();
-    })
+    });
+
+    insertSquareButton.on("click", function(event) {
+        editor.inter.insertText("^2");
+
+        event.preventDefault();
+    });
 
     astronaut.render(
         Section (
@@ -49,7 +56,8 @@ $g.waitForLoad().then(function() {
             ),
             ButtonRow (
                 calculateButton,
-                insertFractionButton
+                insertFractionButton,
+                insertSquareButton
             ),
             resultReadout
         )

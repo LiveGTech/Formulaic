@@ -79,9 +79,14 @@ var FractionAtom = astronaut.component("FractionAtom", function(props, children)
 
 var PowerAtom = astronaut.component("PowerAtom", function(props, children) {
     var baseSlot = richEditor.FormulaicAtomSlot() ();
+    var exponentSlot = richEditor.FormulaicAtomSlot() ();
 
     if (props.base) {
         baseSlot.setText(props.base);
+    }
+
+    if (props.exponent) {
+        exponentSlot.setText(props.exponent);
     }
 
     return richEditor.FormulaicAtom() (
@@ -97,7 +102,7 @@ var PowerAtom = astronaut.component("PowerAtom", function(props, children) {
                 "font-size": "0.6em"
             }
         }) (            
-            richEditor.FormulaicAtomSlot() (),
+            exponentSlot
         ),
         richEditor.FormulaicAtomSyntax() ("))")
     );
@@ -154,8 +159,8 @@ export var atoms = {
         return FractionAtom({numerator: context.match[2]}) ();
     }, /(([^+\-*/×÷]*)over)$/),
     power: new format.Atom(function(context) {
-        return PowerAtom({base: context.match[2]}) ();
-    }, /(([^+\-*/×÷]*)\^)$/),
+        return PowerAtom({base: context.match[2], exponent: context.match[3]}) ();
+    }, /(([^+\-*/×÷]*)\^(\d+)?)$/),
     squareRoot: new format.Atom(function(context) {
         return RootAtom() ();
     }, "sqrt")
