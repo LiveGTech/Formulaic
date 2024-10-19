@@ -85,6 +85,159 @@ export class ComplexNumberType {
         );
     }
 
+    static sqrt(value) {
+        if (value.imag != 0) {
+            return this.exponent(value, new this(1 / 2));
+        }
+    
+        if (value.real < 0) {
+            return Promise.resolve(new this(0, Math.sqrt(Math.abs(value.real))));
+        }
+    
+        return new this(Math.sqrt(value.real));
+    }
+
+    static abs(value) {
+        return new this(Math.sqrt((value.real ** 2) + (value.imag ** 2)));
+    }
+
+    static arg(value) {
+        return new this(Math.atan2(value.imag, value.real));
+    }
+
+    static ln(value) {
+        return new this(
+            Math.log(this.abs(value).real),
+            this.arg(value).real
+        );
+    }
+
+    static sin(value) {
+        return new this(
+            Math.sin(value.real) * Math.cosh(value.imag),
+            Math.cos(value.real) * Math.sinh(value.imag)
+        );
+    }
+
+    static cos(value) {
+        return new this(
+            Math.cos(value.real) * Math.cosh(value.imag),
+            -1 * Math.sin(value.real) * Math.sinh(value.imag)
+        );
+    }
+
+    static tan(value) {
+        var numerator = new this(Math.tan(value.real), Math.tanh(value.imag));
+        var denominatorPart = new this(0, Math.tan(value.real) * Math.tanh(value.imag));
+
+        return this.divide(
+            numerator,
+            this.subtract(new this(1), denominatorPart)
+        );
+    }
+
+    static sinh(value) {
+        return new this(
+            Math.sinh(value.real) * Math.cos(value.imag),
+            Math.cosh(value.real) * Math.sin(value.imag)
+        );
+    }
+
+    static cosh(value) {
+        return new this(
+            Math.cosh(value.real) * Math.cos(value.imag),
+            Math.sinh(value.real) * Math.sin(value.imag)
+        );
+    }
+
+    static tanh(value) {
+        var numerator = new this(Math.tanh(value.real), Math.tan(value.imag));
+        var denominatorPart = new this(0, Math.tanh(value.real) * Math.tan(value.imag));
+
+        return this.divide(
+            numerator,
+            this.add(new this(1), denominatorPart)
+        );
+    }
+
+    static asin(value) {
+        // asin(z) = (1 / i) * ln(zi + sqrt(1 - (z ** 2)))
+
+        return this.multiply(
+            this.divide(new this(1), new this(0, 1)),
+            this.ln(this.add(
+                this.multiply(value, new this(0, 1)),
+                this.sqrt(this.subtract(
+                    new this(1),
+                    this.exponent(value, new this(2))
+                ))
+            ))
+        );
+    }
+
+    static acos(value) {
+        // acos(z) = (1 / i) * ln(z + sqrt((z ** 2) - 1))
+
+        return this.multiply(
+            this.divide(new this(1), new this(0, 1)),
+            this.ln(this.add(
+                value,
+                this.sqrt(this.subtract(
+                    this.exponent(value, new this(2)),
+                    new this(1)
+                ))
+            ))
+        );
+    }
+
+    static atan(value) {
+        // atan(z) = (1 / 2i) * ln((i - z) / (i + z))
+
+        return this.multiply(
+            this.divide(new this(1), new this(0, 2)),
+            this.ln(this.divide(
+                this.subtract(new this(0, 1), value),
+                this.add(new this(0, 1), value)
+            ))
+        );
+    }
+
+    static asinh(value) {
+        // asinh(z) = ln(z + sqrt(1 + (z ** 2)))
+
+        return this.ln(this.add(
+            value,
+            this.sqrt(this.add(
+                new this(1),
+                this.exponent(value, new this(2))
+            ))
+        ));
+    }
+
+    static acosh(value) {
+        // acosh(z) = ln(z + (sqrt(z + 1) * sqrt(z - 1)))
+
+        return this.ln(this.add(
+            value,
+            this.multiply(
+                this.sqrt(this.add(value, new this(1))),
+                this.sqrt(this.subtract(value, new this(1)))
+            )
+        ));
+    }
+
+    static atanh(value) {
+        // atanh(z) = (1 / 2) * (ln(1 + z) - ln(1 - z))
+
+        return this.multiply(
+            new this(1 / 2),
+            this.subtract(
+                this.ln(this.add(new this(1), value)),
+                this.ln(this.subtract(new this(1), value))
+            )
+        );
+    }
+
     roundDecimals(realDecimals = 0, imagDecimals = 0) {
         return new this.constructor(
             Math.round(this.real * realDecimals) / realDecimals,
@@ -256,58 +409,18 @@ engine.registerConcept(new (class extends engine.Concept {
     }
 })());
 
-engine.registerFunction(new engine.FunctionBinding("sqrt", function(value) {
-    if (value < 0) {
-        return Promise.resolve(new ComplexNumberType(0, Math.sqrt(Math.abs(value))));
-    }
+function registerComplexNumberMethod(functionName) {
+    engine.registerFunction(new engine.FunctionBinding(functionName, function() {
+        return Promise.resolve(ComplexNumberType[functionName](...arguments));
+    }));
+}
 
-    return Promise.resolve(new ComplexNumberType(Math.sqrt(value)));
-}));
-
-engine.registerFunction(new engine.FunctionBinding("sin", function(value) {
-    return Promise.resolve(new ComplexNumberType(
-        Math.sin(value.real) * Math.cosh(value.imag),
-        Math.cos(value.real) * Math.sinh(value.imag)
-    ));
-}));
-
-engine.registerFunction(new engine.FunctionBinding("cos", function(value) {
-    return Promise.resolve(new ComplexNumberType(
-        Math.cos(value.real) * Math.cosh(value.imag),
-        Math.sin(value.real) * Math.sinh(value.imag)
-    ));
-}));
-
-engine.registerFunction(new engine.FunctionBinding("tan", function(value) {
-    var numerator = new ComplexNumberType(Math.tan(value.real) + Math.tanh(value.imag));
-    var denominatorPart = new ComplexNumberType(0, Math.tan(value.real) * Math.tanh(value.imag));
-
-    return Promise.resolve(ComplexNumberType.divide(
-        numerator,
-        ComplexNumberType.subtract(new ComplexNumberType(1), denominatorPart)
-    ));
-}));
-
-engine.registerFunction(new engine.FunctionBinding("sinh", function(value) {
-    return Promise.resolve(new ComplexNumberType(
-        Math.sinh(value.real) * Math.cos(value.imag),
-        Math.cosh(value.real) * Math.sin(value.imag)
-    ));
-}));
-
-engine.registerFunction(new engine.FunctionBinding("cosh", function(value) {
-    return Promise.resolve(new ComplexNumberType(
-        Math.cosh(value.real) * Math.cos(value.imag),
-        Math.sinh(value.real) * Math.sin(value.imag)
-    ));
-}));
-
-engine.registerFunction(new engine.FunctionBinding("tanh", function(value) {
-    var numerator = new ComplexNumberType(Math.tanh(value.real) + Math.tan(value.imag));
-    var denominatorPart = new ComplexNumberType(0, Math.tanh(value.real) * Math.tan(value.imag));
-
-    return Promise.resolve(ComplexNumberType.divide(
-        numerator,
-        ComplexNumberType.add(new ComplexNumberType(1), denominatorPart)
-    ));
-}));
+[
+    "sqrt", "abs", "arg", "ln",
+    "sin", "cos", "tan",
+    "sinh", "cosh", "tanh",
+    "asin", "acos", "atan",
+    "asinh", "acosh", "atanh"
+].forEach(function(name) {
+    registerComplexNumberMethod(name);
+});

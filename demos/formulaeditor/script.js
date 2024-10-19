@@ -29,7 +29,9 @@ $g.waitForLoad().then(function() {
 
         expression.evaluate().then(function(result) {
             resultReadout.setText(result);
-        }).catch(function() {
+        }).catch(function(error) {
+            console.warn(error);
+
             resultReadout.setText("Error");
         });
     });
