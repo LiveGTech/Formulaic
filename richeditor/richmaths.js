@@ -160,7 +160,7 @@ export var atoms = {
     }, /(([^+\-*/×÷]*)over)$/),
     power: new format.Atom(function(context) {
         return PowerAtom({base: context.match[2], exponent: context.match[3]}) ();
-    }, /(([^+\-*/×÷]*)\^(\d+)?)$/),
+    }, /(([^+\-*/×÷]*)\^(-?\d+)?)$/),
     squareRoot: new format.Atom(function(context) {
         return RootAtom() ();
     }, "sqrt")
