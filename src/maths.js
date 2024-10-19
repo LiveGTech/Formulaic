@@ -144,6 +144,10 @@ export class NumberLiteral extends engine.ExpressionLiteral {
         var negativeExponent = false;
         var isImaginary = false;
 
+        if (code == "i" || code == "I") {
+            return new this(new ComplexNumberType(0, 1));
+        }
+
         for (var i = 0; i < code.length; i++) {
             if (code[i] == "e" || code[i] == "E") {
                 inExponent = true;
@@ -241,6 +245,10 @@ engine.registerConcept(new (class extends engine.Concept {
         }
 
         if (match = code.match(/^((?:[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)(?:[eE][+-]?[0-9]+)?i?)/)) {
+            return new engine.LiteralToken(NumberLiteral, match[1]);
+        }
+
+        if (match = code.match(/^([iI])\b/)) {
             return new engine.LiteralToken(NumberLiteral, match[1]);
         }
 
