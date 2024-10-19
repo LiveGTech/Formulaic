@@ -416,7 +416,8 @@ function registerComplexNumberMethod(functionName) {
 }
 
 [
-    "sqrt", "abs", "arg", "ln",
+    "sqrt", "abs", "arg",
+    "ln",
     "sin", "cos", "tan",
     "sinh", "cosh", "tanh",
     "asin", "acos", "atan",

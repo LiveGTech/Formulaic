@@ -18,6 +18,7 @@ $g.waitForLoad().then(function() {
     var calculateButton = Button() ("Calculate");
     var insertFractionButton = Button("secondary") ("Insert fraction");
     var insertSquareButton = Button("secondary") ("Insert square");
+    var insertLnButton = Button("secondary") ("Insert ln");
     var resultReadout = Paragraph() ();
 
     editor.on("input keyup", function() {
@@ -48,6 +49,12 @@ $g.waitForLoad().then(function() {
         event.preventDefault();
     });
 
+    insertLnButton.on("click", function(event) {
+        editor.inter.insertText("ln(");
+
+        event.preventDefault();
+    });
+
     astronaut.render(
         Section (
             Heading() ("Formulaic Formula Editor Demo"),
@@ -59,7 +66,8 @@ $g.waitForLoad().then(function() {
             ButtonRow (
                 calculateButton,
                 insertFractionButton,
-                insertSquareButton
+                insertSquareButton,
+                insertLnButton
             ),
             resultReadout
         )

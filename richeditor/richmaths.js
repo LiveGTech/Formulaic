@@ -166,6 +166,22 @@ export var atoms = {
     }, "sqrt")
 };
 
+[
+    "arg",
+    "ln",
+    "sin", "cos", "tan",
+    "sinh", "cosh", "tanh",
+    "asin", "acos", "atan",
+    "asinh", "acosh", "atanh"
+].forEach(function(functionName) {
+    format.registerAtom(new format.Atom(function(context) {
+        return richEditor.FormulaicAtom() (
+            Text(functionName),
+            BracketAtom({parent: context.parent, isClosing: false}) ()
+        );
+    }, functionName + "("));
+});
+
 Object.values(atoms).forEach(function(atom) {
     format.registerAtom(atom);
 });
