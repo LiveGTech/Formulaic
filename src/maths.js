@@ -112,6 +112,20 @@ export class ComplexNumberType {
         );
     }
 
+    static log(value) {
+        return this.divide(
+            this.ln(value),
+            this.ln(new this(10))
+        );
+    }
+
+    static logab(a, b) {
+        return this.divide(
+            this.ln(a),
+            this.ln(b)
+        );
+    }
+
     static sin(value) {
         return new this(
             Math.sin(value.real) * Math.cosh(value.imag),
@@ -417,7 +431,7 @@ function registerComplexNumberMethod(functionName) {
 
 [
     "sqrt", "abs", "arg",
-    "ln",
+    "ln", "log", "logab",
     "sin", "cos", "tan",
     "sinh", "cosh", "tanh",
     "asin", "acos", "atan",

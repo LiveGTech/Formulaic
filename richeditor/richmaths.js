@@ -23,8 +23,8 @@ var BracketAtom = astronaut.component("BracketAtom", function(props, children) {
     );
 
     new ResizeObserver(function() {
-        var normalHeight = atom.get().clientHeight;
-        var desiredHeight = props.parent.get().clientHeight;
+        var normalHeight = atom.get().getBoundingClientRect;
+        var desiredHeight = props.parent.get().getBoundingClientRect;
         var containerComputedStyles = getComputedStyle(props.parent.get());
 
         desiredHeight -= parseFloat(containerComputedStyles.paddingTop || 0);
@@ -129,9 +129,7 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
                 "margin-inline-end": "0.1em",
                 "padding-inline-end": "0.1em"
             }
-        }) (
-            argSlot,
-        ),
+        }) (argSlot),
         richEditor.FormulaicAtomSyntax() (")")
     );
 
@@ -140,6 +138,37 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
         var desiredHeight = atom.get().clientHeight + 2;
 
         rootSymbol.setStyle("transform", `scaleY(${desiredHeight / normalHeight})`);
+    }).observe(atom.get());
+
+    return atom;
+});
+
+var AbsAtom = astronaut.component("AbsAtom", function(props, children) {
+    var argSlot = richEditor.FormulaicAtomSlot() ();
+    var prefixBar = richEditor.FormulaicAtomNonSyntax() ("|");
+    var suffixBar = richEditor.FormulaicAtomNonSyntax() ("|");
+
+    var atom = richEditor.FormulaicAtom({
+        styles: {
+            "display": "inline-flex",
+            "vertical-align": "middle",
+            "align-items": "center"
+        }
+    }) (
+        prefixBar,
+        richEditor.FormulaicAtomSyntax() (" abs("),
+        argSlot,
+        richEditor.FormulaicAtomSyntax() (")"),
+        suffixBar
+    );
+
+    new ResizeObserver(function() {
+        var normalHeight = prefixBar.get().clientHeight;
+        var desiredHeight = atom.get().clientHeight + 10;
+
+        [prefixBar, suffixBar].forEach(function(bar) {
+            bar.setStyle("transform", `scaleY(${desiredHeight / normalHeight})`);
+        });
     }).observe(atom.get());
 
     return atom;
@@ -161,14 +190,17 @@ export var atoms = {
     power: new format.Atom(function(context) {
         return PowerAtom({base: context.match[2], exponent: context.match[3]}) ();
     }, /(([^+\-*/×÷]*)\^(-?\d+)?)$/),
-    squareRoot: new format.Atom(function(context) {
+    sqrt: new format.Atom(function(context) {
         return RootAtom() ();
-    }, "sqrt")
+    }, "sqrt"),
+    abs: new format.Atom(function(context) {
+        return AbsAtom() ();
+    }, "abs")
 };
 
 [
     "arg",
-    "ln",
+    "ln", "log",
     "sin", "cos", "tan",
     "sinh", "cosh", "tanh",
     "asin", "acos", "atan",
