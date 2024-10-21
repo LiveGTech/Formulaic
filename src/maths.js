@@ -426,12 +426,11 @@ export function createEngine() {
                 return new engine.LiteralToken(OctalIntegerLiteral, match[1]);
             }
 
-            if (match = code.match(/^((?:[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)(?:[eE][+-]?[0-9]+)?i?)/)) {
-                // We allow this even if decimal point is comma in case locale prefers to use (or accidentally uses) dot
-                return new engine.LiteralToken(NumberLiteral, match[1]);
-            }
-
-            if (engine.decimalPointIsComma && (match = code.match(/^((?:[0-9]+\,?[0-9]*|[0-9]*\,?[0-9]+)(?:[eE][+-]?[0-9]+)?i?)/))) {
+            if (
+                // We allow dots even if decimal point is comma in case locale prefers to use (or accidentally uses) dot
+                (engine.decimalPointIsComma && (match = code.match(/^((?:[0-9]+[,.]?[0-9]*|[0-9]*[,.]?[0-9]+)(?:[eE][+-]?[0-9]+)?i?)/))) ||
+                (!engine.decimalPointIsComma && (match = code.match(/^((?:[0-9]+\.?[0-9]*|[0-9]*\.?[0-9]+)(?:[eE][+-]?[0-9]+)?i?)/)))
+            ) {
                 return new engine.LiteralToken(NumberLiteral, match[1]);
             }
 
