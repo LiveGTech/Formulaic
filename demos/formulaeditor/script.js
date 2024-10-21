@@ -19,14 +19,24 @@ $g.waitForLoad().then(function() {
     var insertFractionButton = Button("secondary") ("Insert fraction");
     var insertSquareButton = Button("secondary") ("Insert square");
     var insertLnButton = Button("secondary") ("Insert ln");
+    var decimalPointIsCommaInput = CheckboxInput() ();
     var resultReadout = Paragraph() ();
 
-    editor.on("input keyup", function() {
-        linearExpression.setText(editor.inter.getExpression());
+    function updateLinearExpression() {
+        linearExpression.setText(editor.inter.getExpression({separator: maths.engine.separator}));
+    }
+
+    editor.on("input keyup", updateLinearExpression);
+
+    decimalPointIsCommaInput.on("change", function() {
+        maths.engine.decimalPointIsComma = decimalPointIsCommaInput.getValue();
+        maths.engine.separator = decimalPointIsCommaInput.getValue() ? ";" : ",";
+
+        updateLinearExpression();
     });
 
     calculateButton.on("click", function() {
-        var expression = maths.engine.Expression.parse(editor.inter.getExpression());
+        var expression = maths.engine.Expression.parse(editor.inter.getExpression({separator: maths.engine.separator}));
 
         expression.evaluate().then(function(result) {
             resultReadout.setText(result);
@@ -62,6 +72,10 @@ $g.waitForLoad().then(function() {
             Accordion (
                 Text("Linear expression"),
                 linearExpression
+            ),
+            Label (
+                decimalPointIsCommaInput,
+                Text("Decimal point is comma")
             ),
             ButtonRow (
                 calculateButton,

@@ -193,7 +193,7 @@ var LogabAtom = astronaut.component("LogabAtom", function(props, children) {
             }
         }) (aSlot),
         openingBracket,
-        richEditor.FormulaicAtomSyntax() (", "),
+        richEditor.FormulaicAtomSeparator() (),
         bSlot,
         closingBracket,
         richEditor.FormulaicAtomSyntax() (")")

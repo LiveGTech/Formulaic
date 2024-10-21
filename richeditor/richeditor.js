@@ -72,7 +72,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
 
     var editor = c.Container({
         ...(props || {}),
-        styleSets: [...(props.styleSets || []), EDITOR_STYLES, ...(!props.inline ? [INPUT_EDITOR_STYLES] : [INLINE_EDITOR_STYLES])],
+        styleSets: [...(props?.styleSets || []), EDITOR_STYLES, ...(!props.inline ? [INPUT_EDITOR_STYLES] : [INLINE_EDITOR_STYLES])],
         attributes: {
             ...(props.attributes || {}),
             "contenteditable": "plaintext-only"
@@ -259,9 +259,10 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         applyAtoms();
     };
 
-    inter.getExpression = function() {
+    inter.getExpression = function(options = {}) {
         var copy = editor.copy();
 
+        copy.find(".formulaic_separator").setText(`${options.separator || ","} `);
         copy.find(".formulaic_nonSyntax").remove();
 
         return copy.getText();
@@ -393,24 +394,24 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
 export var FormulaicAtom = astronaut.component("FormulaicAtom", function(props, children) {
     return c.TextFragment({
         ...(props || {}),
-        classes: [...(props.classes || []), "formulaic_atom"],
+        classes: [...(props?.classes || []), "formulaic_atom"],
         attributes: {
             ...(props.attributes || {}),
             "contenteditable": "false"
         },
-        styleSets: [...(props.styleSets || []), ATOM_STYLES]
+        styleSets: [...(props?.styleSets || []), ATOM_STYLES]
     }) (...children);
 });
 
 export var FormulaicAtomSlot = astronaut.component("FormulaicAtomSlot", function(props, children) {
     return c.TextFragment({
         ...(props || {}),
-        classes: [...(props.classes || []), "formulaic_atomSlot"],
+        classes: [...(props?.classes || []), "formulaic_atomSlot"],
         attributes: {
             ...(props.attributes || {}),
             "contenteditable": "plaintext-only",
         },
-        styleSets: [...(props.styleSets || []), SLOT_STYLES]
+        styleSets: [...(props?.styleSets || []), SLOT_STYLES]
     }) (...children);
 });
 
@@ -418,16 +419,23 @@ export var FormulaicAtomSyntax = astronaut.component("FormulaicAtomSyntax", func
     return c.TextFragment({
         ...(props || {}),
         styles: {
-            ...(props.styles || {}),
+            ...(props?.styles || {}),
             "display": "none",
         }
     }) (...children);
 });
 
+export var FormulaicAtomSeparator = astronaut.component("FormulaicAtomSeparator", function(props, children) {
+    return FormulaicAtomSyntax({
+        ...(props || {}),
+        classes: [...(props?.classes || []), "formulaic_separator"]
+    }) (", ");
+});
+
 export var FormulaicAtomNonSyntax = astronaut.component("FormulaicAtomNonSyntax", function(props, children) {
     return c.TextFragment({
         ...(props || {}),
-        classes: [...(props.classes || []), "formulaic_nonSyntax"]
+        classes: [...(props?.classes || []), "formulaic_nonSyntax"]
     }) (...children);
 });
 

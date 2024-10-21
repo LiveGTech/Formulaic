@@ -8,6 +8,8 @@
 */
 
 export class Engine {
+    separator = ",";
+
     FunctionBinding = class {
         constructor(name, callback) {
             this.name = name;
@@ -165,7 +167,7 @@ export class Engine {
 
             var expression = new engineScope.ExpressionNode([
                 ...args[0],
-                new engineScope.Token("separator", ","),
+                new engineScope.Token("separator", engineScope.separator),
                 ...args[1]
             ], this.codeBindings[operatorToken.code]);
 
@@ -439,7 +441,7 @@ export class Engine {
                     continue;
                 }
 
-                if (matchesToken(",")) {
+                if (matchesToken(engineScope.separator)) {
                     addToken("separator");
                     continue;
                 }
