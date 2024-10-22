@@ -91,6 +91,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
     editorContainer.add(editor, caret);
 
     var caretSelectStartAt = null;
+    var lastFocusedElement = null;
 
     function expandAtomSelectionTowardsStart(thenDelete = false) {
         var selection = document.getSelection();
@@ -253,7 +254,15 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         editor.clear();
     };
 
+    document.body.addEventListener("focusout", function(event) {
+        lastFocusedElement = event.target;
+    });
+
     inter.insertText = function(text) {
+        if (lastFocusedElement == null || (editor.get() != lastFocusedElement && !editor.get().contains(lastFocusedElement))) {
+            editor.focus();
+        }
+
         document.execCommand("insertText", false, text);
 
         applyAtoms();
