@@ -176,6 +176,14 @@ var LogabAtom = astronaut.component("LogabAtom", function(props, children) {
     var openingBracket = richEditor.FormulaicAtomNonSyntax() ("(");
     var closingBracket = richEditor.FormulaicAtomNonSyntax() (")");
 
+    if (props.a) {
+        aSlot.setText(props.a);
+    }
+
+    if (props.b) {
+        bSlot.setText(props.b);
+    }
+
     var atom = richEditor.FormulaicAtom({
         styles: {
             "display": "inline-flex",
@@ -236,6 +244,9 @@ export var atoms = {
     logab: new format.Atom(function(context) {
         return LogabAtom() ();
     }, "logab"),
+    log2: new format.Atom(function(context) {
+        return LogabAtom({a: 2}) ();
+    }, "log2"),
     divideOperator: new format.Atom(function(context) {
         return Text("π");
     }, "pi")
