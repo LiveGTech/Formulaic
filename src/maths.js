@@ -11,10 +11,11 @@ import * as formulaic from "./formulaic.js";
 
 var exports = {};
 
-export function createEngine() {
+export function createEngine(options = {}) {
     var engine = new formulaic.Engine();
 
     engine.decimalPointIsComma = false;
+    engine.variables = options.variables || {};
 
     class ComplexNumberType {
         constructor(real, imag = 0) {
@@ -381,6 +382,10 @@ export function createEngine() {
     var implicitMultiplyOperator;
 
     engine.registerOperator(new engine.BinaryOperator({
+        "=": new engine.FunctionBinding("assign", (a, b) => Promise.resolve(engine.variables[a] = b))
+    }));
+
+    engine.registerOperator(new engine.BinaryOperator({
         "+": new engine.FunctionBinding("add", (a, b) => Promise.resolve(ComplexNumberType.add(a, b))),
         "-": new engine.FunctionBinding("subtract", (a, b) => Promise.resolve(ComplexNumberType.subtract(a, b)))
     }));
@@ -438,6 +443,12 @@ export function createEngine() {
                 return new engine.LiteralToken(NumberLiteral, match[1]);
             }
 
+            for (var variableName of Object.keys(engine.variables)) {
+                if (code.startsWith(variableName) && !(code[variableName.length] || "").match(/\w/)) {
+                    return new engine.VariableToken(variableName, variableName, () => Promise.resolve(engine.variables[variableName]));
+                }
+            }
+
             return null;
         }
     })());
@@ -464,4 +475,10 @@ export function createEngine() {
 
 export var engine = createEngine();
 
-export default exports;
+export var {
+    ComplexNumberType,
+    NumberLiteral,
+    HexadecimalIntegerLiteral,
+    BinaryIntegerLiteral,
+    OctalIntegerLiteral
+} = exports;

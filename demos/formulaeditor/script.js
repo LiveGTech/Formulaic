@@ -9,6 +9,11 @@ astronaut.unpack();
 $g.waitForLoad().then(function() {
     var editor = richMaths.format.createRichEditor();
 
+    maths.engine.variables = {
+        x: new maths.ComplexNumberType(0),
+        y: new maths.ComplexNumberType(0)
+    };
+
     var linearExpression = CodeBlock({
         styles: {
             "margin": "0"

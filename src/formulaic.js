@@ -9,6 +9,7 @@
 
 export class Engine {
     separator = ",";
+    assignmentOperator = "=";
 
     FunctionBinding = class {
         constructor(name, callback) {
@@ -298,6 +299,16 @@ export class Engine {
                         instance.children.push(token.literalClass.parse(token.code));
                         continue;
 
+                    case "variable":
+                        var isAssignment = false;
+
+                        if (tokens[i + 1]?.type == "operator" && tokens[i + 1]?.code == engineScope.assignmentOperator) {
+                            isAssignment = true;
+                        }
+
+                        instance.children.push(engineScope.ExpressionNode.parseTokens([token.variableId], isAssignment ? token.idGetterReferenceFunction : token.getterReferenceFunction));
+                        continue;
+
                     case "separator":
                     case "operator":
                         instance.children.push(token);
@@ -378,6 +389,24 @@ export class Engine {
         }
     };
 
+    VariableToken = ((engineScope) => class extends this.Token {
+        constructor(variableId, code, getter) {
+            super("variable", code);
+
+            this.variableId = variableId;
+            this.getter = getter;
+            this.idGetter = () => Promise.resolve(this.variableId);
+        }
+
+        get getterReferenceFunction() {
+            return new engineScope.FunctionBinding(null, this.getter);
+        }
+
+        get idGetterReferenceFunction() {
+            return new engineScope.FunctionBinding(null, this.idGetter);
+        }
+    })(this);
+
     Expression = ((engineScope) => class {
         constructor(rootNode = new engineScope.ExpressionNode()) {
             this.rootNode = rootNode;
@@ -438,6 +467,11 @@ export class Engine {
 
                 if (matchesToken("[a-zA-Z_][a-zA-Z0-9_]*\\s*\\(")) {
                     addToken("call");
+                    continue;
+                }
+
+                if (matchesToken(engineScope.separator)) {
+                    addToken("separator");
                     continue;
                 }
 
