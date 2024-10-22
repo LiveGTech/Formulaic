@@ -444,7 +444,7 @@ export function createEngine(options = {}) {
             }
 
             for (var variableName of Object.keys(engine.variables)) {
-                if (code.startsWith(variableName) && !(code[variableName.length] || "").match(/\w/)) {
+                if (code.startsWith(variableName)) {
                     return new engine.VariableToken(variableName, variableName, () => Promise.resolve(engine.variables[variableName]));
                 }
             }
