@@ -14,9 +14,6 @@ var exports = {};
 export function createEngine(options = {}) {
     var engine = new formulaic.Engine();
 
-    engine.decimalPointIsComma = false;
-    engine.variables = options.variables || {};
-
     class ComplexNumberType {
         constructor(real, imag = 0) {
             this.real = real;
@@ -443,6 +440,12 @@ export function createEngine(options = {}) {
                 return new engine.LiteralToken(NumberLiteral, match[1]);
             }
 
+            for (var constantName of Object.keys(engine.constants)) {
+                if (code.startsWith(constantName)) {
+                    return new engine.VariableToken(constantName, constantName, () => Promise.resolve(engine.constants[constantName]), false);
+                }
+            }
+
             for (var variableName of Object.keys(engine.variables)) {
                 if (code.startsWith(variableName)) {
                     return new engine.VariableToken(variableName, variableName, () => Promise.resolve(engine.variables[variableName]));
@@ -469,6 +472,17 @@ export function createEngine(options = {}) {
     ].forEach(function(name) {
         registerComplexNumberMethod(name);
     });
+
+    engine.decimalPointIsComma = false;
+
+    engine.constants = options.constants || {
+        "pi": new ComplexNumberType(Math.PI),
+        "e": new ComplexNumberType(Math.E)
+    };
+
+    engine.constants["π"] = engine.constants["pi"];
+
+    engine.variables = options.variables || {};
 
     return engine;
 }

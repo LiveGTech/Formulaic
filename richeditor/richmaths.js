@@ -235,7 +235,10 @@ export var atoms = {
     }, "abs"),
     logab: new format.Atom(function(context) {
         return LogabAtom() ();
-    }, "logab")
+    }, "logab"),
+    divideOperator: new format.Atom(function(context) {
+        return Text("π");
+    }, "pi")
 };
 
 [

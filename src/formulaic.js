@@ -304,6 +304,10 @@ export class Engine {
 
                         if (tokens[i + 1]?.type == "operator" && tokens[i + 1]?.code == engineScope.assignmentOperator) {
                             isAssignment = true;
+
+                            if (!token.canSet) {
+                                throw new TypeError("Variable is a constant (cannot set value)");
+                            }
                         }
 
                         instance.children.push(engineScope.ExpressionNode.parseTokens([token.variableId], isAssignment ? token.idGetterReferenceFunction : token.getterReferenceFunction));
@@ -390,11 +394,13 @@ export class Engine {
     };
 
     VariableToken = ((engineScope) => class extends this.Token {
-        constructor(variableId, code, getter) {
+        constructor(variableId, code, getter, canSet = true) {
             super("variable", code);
 
             this.variableId = variableId;
             this.getter = getter;
+            this.canSet = canSet;
+
             this.idGetter = () => Promise.resolve(this.variableId);
         }
 
