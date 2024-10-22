@@ -254,8 +254,6 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
     };
 
     inter.insertText = function(text) {
-        editor.focus();
-
         document.execCommand("insertText", false, text);
 
         applyAtoms();
