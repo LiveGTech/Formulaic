@@ -247,7 +247,7 @@ export var atoms = {
     log2: new format.Atom(function(context) {
         return LogabAtom({a: 2}) ();
     }, "log2"),
-    divideOperator: new format.Atom(function(context) {
+    pi: new format.Atom(function(context) {
         return Text("π");
     }, "pi")
 };
