@@ -104,7 +104,7 @@ var PowerAtom = astronaut.component("PowerAtom", function(props, children) {
     );
 });
 
-var RootAtom = astronaut.component("RootAtom", function(props, children) {
+var SquareRootAtom = astronaut.component("SquareRootAtom", function(props, children) {
     var argSlot = richEditor.FormulaicAtomSlot() ();
     var rootSymbol = richEditor.FormulaicAtomNonSyntax() ("√");
 
@@ -119,6 +119,50 @@ var RootAtom = astronaut.component("RootAtom", function(props, children) {
     }) (
         rootSymbol,
         richEditor.FormulaicAtomSyntax() (" sqrt("),
+        c.TextFragment({
+            styles: {
+                "border-top": "0.1em solid var(--secondaryText)",
+                "margin-inline-end": "0.1em",
+                "padding-inline-end": "0.1em"
+            }
+        }) (argSlot),
+        richEditor.FormulaicAtomSyntax() (")")
+    );
+
+    new ResizeObserver(function() {
+        var normalHeight = rootSymbol.get().clientHeight;
+        var desiredHeight = atom.get().clientHeight + 2;
+
+        rootSymbol.setStyle("transform", `scaleY(${desiredHeight / normalHeight})`);
+    }).observe(atom.get());
+
+    return atom;
+});
+
+var RootAtom = astronaut.component("RootAtom", function(props, children) {
+    var indexSlot = richEditor.FormulaicAtomSlot() ();
+    var argSlot = richEditor.FormulaicAtomSlot() ();
+    var rootSymbol = richEditor.FormulaicAtomNonSyntax() ("√");
+
+    var atom = richEditor.FormulaicAtom({
+        styles: {
+            "display": "inline-flex",
+            "vertical-align": "middle",
+            "align-items": "center",
+            "margin-top": "0.1em",
+            "margin-bottom": "0.3em"
+        }
+    }) (
+        richEditor.FormulaicAtomSyntax() (" root("),
+        c.ElementNode("sup", {
+            // TODO: This style for superscripts and subscripts should really be in Adapt UI
+            styles: {
+                "transform": "translateY(-50%)",
+                "font-size": "0.6em"
+            }
+        }) (indexSlot),
+        rootSymbol,
+        richEditor.FormulaicAtomSeparator() (),
         c.TextFragment({
             styles: {
                 "border-top": "0.1em solid var(--secondaryText)",
@@ -236,8 +280,11 @@ export var atoms = {
         return PowerAtom({base: context.match[2], exponent: context.match[3]}) ();
     }, /(([^+\-*/×÷]*)\^(-?\d+)?)$/),
     sqrt: new format.Atom(function(context) {
-        return RootAtom() ();
+        return SquareRootAtom() ();
     }, "sqrt"),
+    root: new format.Atom(function(context) {
+        return RootAtom() ();
+    }, "root"),
     abs: new format.Atom(function(context) {
         return AbsAtom() ();
     }, "abs"),

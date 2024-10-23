@@ -100,6 +100,39 @@ export function createEngine(options = {}) {
             return new this(Math.sqrt(value.real));
         }
 
+        static root(index, value) {
+            if (index == 2) {
+                return this.sqrt(value);
+            }
+
+            return this.exponent(value, this.divide(
+                new this(1),
+                index
+            ));
+        }
+
+        static factorial(value) {
+            if (value.imag != 0) {
+                return Promise.resolve(NaN);
+            }
+
+            var n = Math.round(value.real);
+
+            if (n <= 0 || n > 170) {
+                return Promise.resolve(new this(Infinity));
+            }
+
+            var result = 1;
+            var iterations = 0;
+
+            for (; n > 0; n--) {
+                result *= n;
+                iterations++;
+            }
+
+            return Promise.resolve(new this(result));
+        }
+
         static abs(value) {
             return new this(Math.sqrt((value.real ** 2) + (value.imag ** 2)));
         }
@@ -402,6 +435,10 @@ export function createEngine(options = {}) {
         "-": new engine.FunctionBinding("negate", (value) => Promise.resolve(ComplexNumberType.subtract(new ComplexNumberType(0), value)))
     }));
 
+    engine.registerOperator(new engine.UnaryOperator({
+        "!": new engine.FunctionBinding("factorial", (value) => Promise.resolve(ComplexNumberType.factorial(value)))
+    }, false));
+
     engine.registerOperator(implicitMultiplyOperator = new engine.BinaryOperator({
         "*": new engine.FunctionBinding("multiply", (a, b) => Promise.resolve(ComplexNumberType.multiply(a, b)))
     }));
@@ -463,7 +500,7 @@ export function createEngine(options = {}) {
     }
 
     [
-        "sqrt", "abs", "arg",
+        "sqrt", "root", "abs", "arg",
         "ln", "log", "logab",
         "sin", "cos", "tan",
         "sinh", "cosh", "tanh",

@@ -97,7 +97,7 @@ export class Engine {
             var arg = [];
             var operatorToken = null;
 
-            if ((this.prefix && !this.isTargetToken(children[0])) || (!this.prefix && this.isTargetToken(hildren[children.length - 1]))) {
+            if ((this.prefix && !this.isTargetToken(children[0])) || (!this.prefix && !this.isTargetToken(children[children.length - 1]))) {
                 return null;
             }
 
