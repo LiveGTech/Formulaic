@@ -308,6 +308,10 @@ export function createEngine(options = {}) {
             var end = await end$.evaluate();
             var sum = new this(0);
 
+            if (start.imag != 0 || end.imag != 0) {
+                return NaN;
+            }
+
             for (var i = start.real; i <= end.real; i++) {
                 engine.variables[variableName] = new this(i);
 
@@ -336,6 +340,10 @@ export function createEngine(options = {}) {
             var start = await start$.evaluate();
             var end = await end$.evaluate();
             var product = new this(1);
+
+            if (start.imag != 0 || end.imag != 0) {
+                return NaN;
+            }
 
             for (var i = start.real; i <= end.real; i++) {
                 engine.variables[variableName] = new this(i);
