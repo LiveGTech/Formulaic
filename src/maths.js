@@ -307,6 +307,7 @@ export function createEngine(options = {}) {
             var start = await start$.evaluate();
             var end = await end$.evaluate();
             var sum = new this(0);
+            var iterations = 0;
 
             if (start.imag != 0 || end.imag != 0) {
                 return NaN;
@@ -316,8 +317,9 @@ export function createEngine(options = {}) {
                 engine.variables[variableName] = new this(i);
 
                 sum = this.add(sum, await expression$.evaluate());
+                iterations++;
 
-                if (i % 1000 == 999) {
+                if (iterations % 1000 == 999) {
                     await yieldThread();
                 }
             }
@@ -340,6 +342,7 @@ export function createEngine(options = {}) {
             var start = await start$.evaluate();
             var end = await end$.evaluate();
             var product = new this(1);
+            var iterations = 0;
 
             if (start.imag != 0 || end.imag != 0) {
                 return NaN;
@@ -349,8 +352,9 @@ export function createEngine(options = {}) {
                 engine.variables[variableName] = new this(i);
 
                 product = this.multiply(product, await expression$.evaluate());
+                iterations++;
 
-                if (i % 1000 == 999) {
+                if (iterations % 1000 == 999) {
                     await yieldThread();
                 }
             }
