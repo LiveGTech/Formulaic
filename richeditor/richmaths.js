@@ -90,9 +90,8 @@ var PowerAtom = astronaut.component("PowerAtom", function(props, children) {
     }
 
     return richEditor.FormulaicAtom (
-        richEditor.FormulaicAtomSyntax() ("(("),
         baseSlot,
-        richEditor.FormulaicAtomSyntax() (")^("),
+        richEditor.FormulaicAtomSyntax() ("^("),
         c.ElementNode("sup", {
             // TODO: This style for superscripts and subscripts should really be in Adapt UI
             styles: {
@@ -100,7 +99,7 @@ var PowerAtom = astronaut.component("PowerAtom", function(props, children) {
                 "font-size": "0.6em"
             }
         }) (exponentSlot),
-        richEditor.FormulaicAtomSyntax() ("))")
+        richEditor.FormulaicAtomSyntax() (")")
     );
 });
 
