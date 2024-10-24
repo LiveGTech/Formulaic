@@ -11,6 +11,12 @@ import * as formulaic from "./formulaic.js";
 
 var exports = {};
 
+function yieldThread() {
+    return new Promise(function(resolve, reject) {
+        requestAnimationFrame(resolve);
+    });
+}
+
 export function createEngine(options = {}) {
     var engine = new formulaic.Engine();
 
@@ -288,6 +294,64 @@ export function createEngine(options = {}) {
             );
         }
 
+        static async sum(variable$, start$, end$, expression$) {
+            var variableTokens = variable$.tokens;
+
+            if (!variableTokens || !Object.keys(engine.variables).includes(variableTokens[0])) {
+                throw new ReferenceError("Invalid subject variable");
+            }
+
+            var variableName = variableTokens[0];
+            var oldVariableValue = engine.variables[variableName];
+
+            var start = await start$.evaluate();
+            var end = await end$.evaluate();
+            var sum = new this(0);
+
+            for (var i = start.real; i <= end.real; i++) {
+                engine.variables[variableName] = new this(i);
+
+                sum = this.add(sum, await expression$.evaluate());
+
+                if (i % 1000 == 999) {
+                    await yieldThread();
+                }
+            }
+
+            engine.variables[variableName] = oldVariableValue;
+
+            return sum;
+        }
+
+        static async product(variable$, start$, end$, expression$) {
+            var variableTokens = variable$.tokens;
+
+            if (!variableTokens || !Object.keys(engine.variables).includes(variableTokens[0])) {
+                throw new ReferenceError("Invalid subject variable");
+            }
+
+            var variableName = variableTokens[0];
+            var oldVariableValue = engine.variables[variableName];
+
+            var start = await start$.evaluate();
+            var end = await end$.evaluate();
+            var product = new this(1);
+
+            for (var i = start.real; i <= end.real; i++) {
+                engine.variables[variableName] = new this(i);
+
+                product = this.multiply(product, await expression$.evaluate());
+
+                if (i % 1000 == 999) {
+                    await yieldThread();
+                }
+            }
+
+            engine.variables[variableName] = oldVariableValue;
+
+            return product;
+        }
+
         roundDecimals(realDecimals = 0, imagDecimals = 0) {
             return new this.constructor(
                 Math.round(this.real * realDecimals) / realDecimals,
@@ -493,10 +557,10 @@ export function createEngine(options = {}) {
         }
     })());
 
-    function registerComplexNumberMethod(functionName) {
+    function registerComplexNumberMethod(functionName, evaluateArgs = true) {
         engine.registerFunction(new engine.FunctionBinding(functionName, function() {
-            return Promise.resolve(ComplexNumberType[functionName](...arguments));
-        }));
+            return ComplexNumberType[functionName](...arguments);
+        }, evaluateArgs));
     }
 
     [
@@ -508,6 +572,10 @@ export function createEngine(options = {}) {
         "asinh", "acosh", "atanh"
     ].forEach(function(name) {
         registerComplexNumberMethod(name);
+    });
+
+    ["sum", "product"].forEach(function(name) {
+        registerComplexNumberMethod(name, false);
     });
 
     engine.decimalPointIsComma = false;

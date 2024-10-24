@@ -12,9 +12,10 @@ export class Engine {
     assignmentOperator = "=";
 
     FunctionBinding = class {
-        constructor(name, callback) {
+        constructor(name, callback, evaluateArgs = true) {
             this.name = name;
             this.callback = callback;
+            this.evaluateArgs = evaluateArgs;
         }
     };
 
@@ -234,10 +235,14 @@ export class Engine {
 
             this.children = children;
             this.referenceFunction = referenceFunction;
+
+            this.tokens = null;
         }
 
         static parseTokens(tokens, referenceFunction = engineScope.DIRECT_FUNCTION) {
             var instance = new this([], referenceFunction);
+
+            instance.tokens = tokens;
 
             for (var i = 0; i < tokens.length; i++) {
                 var token = tokens[i];
@@ -370,6 +375,10 @@ export class Engine {
 
         evaluate() {
             var thisScope = this;
+
+            if (!thisScope.referenceFunction.evaluateArgs) {
+                return thisScope.referenceFunction.callback(...this.children);
+            }
 
             return Promise.all(this.children.map((child) => child.evaluate())).then(function(values) {
                 return thisScope.referenceFunction.callback(...values);

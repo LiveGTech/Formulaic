@@ -263,6 +263,154 @@ var LogabAtom = astronaut.component("LogabAtom", function(props, children) {
     return atom;
 });
 
+var SumAtom = astronaut.component("SumAtom", function(props, children) {
+    var variableSlot = richEditor.FormulaicAtomSlot() ();
+    var startSlot = richEditor.FormulaicAtomSlot() ();
+
+    var endSlot = richEditor.FormulaicAtomSlot({
+        styles: {
+            "grid-area": "end",
+            "font-size": "0.6em"
+        }
+    }) ();
+
+    var expressionSlot = richEditor.FormulaicAtomSlot({
+        styles: {
+            "grid-area": "expression"
+        }
+    }) ();
+
+    if (props.variable) {
+        variableSlot.setText(props.variable);
+    }
+
+    if (props.start) {
+        startSlot.setText(props.start);
+    }
+
+    if (props.end) {
+        endSlot.setText(props.end);
+    }
+
+    if (props.expression) {
+        expressionSlot.setText(props.expression);
+    }
+
+    var atom = richEditor.FormulaicAtom({
+        styles: {
+            "display": "inline-grid",
+            "grid-template-areas": [
+                "end .",
+                "sum expression",
+                "start ."
+            ].map(JSON.stringify).join(" "),
+            "justify-items": "center",
+            "align-items": "center",
+            "vertical-align": "middle"
+        }
+    }) (
+        richEditor.FormulaicAtomSyntax() (" sum("),
+        richEditor.FormulaicAtomNonSyntax({
+            styles: {
+                "grid-area": "sum",
+                "font-size": "1.5em"
+            }
+        }) ("Σ"),
+        c.Container({
+            styles: {
+                "grid-area": "start",
+                "font-size": "0.6em"
+            }
+        }) (
+            variableSlot,
+            richEditor.FormulaicAtomNonSyntax() ("="),
+            richEditor.FormulaicAtomSeparator() (),
+            startSlot,
+        ),
+        richEditor.FormulaicAtomSeparator() (),
+        endSlot,
+        richEditor.FormulaicAtomSeparator() (),
+        expressionSlot,
+        richEditor.FormulaicAtomSyntax() (")")
+    );
+
+    return atom;
+});
+
+var ProductAtom = astronaut.component("ProductAtom", function(props, children) {
+    var variableSlot = richEditor.FormulaicAtomSlot() ();
+    var startSlot = richEditor.FormulaicAtomSlot() ();
+
+    var endSlot = richEditor.FormulaicAtomSlot({
+        styles: {
+            "grid-area": "end",
+            "font-size": "0.6em"
+        }
+    }) ();
+
+    var expressionSlot = richEditor.FormulaicAtomSlot({
+        styles: {
+            "grid-area": "expression"
+        }
+    }) ();
+
+    if (props.variable) {
+        variableSlot.setText(props.variable);
+    }
+
+    if (props.start) {
+        startSlot.setText(props.start);
+    }
+
+    if (props.end) {
+        endSlot.setText(props.end);
+    }
+
+    if (props.expression) {
+        expressionSlot.setText(props.expression);
+    }
+
+    var atom = richEditor.FormulaicAtom({
+        styles: {
+            "display": "inline-grid",
+            "grid-template-areas": [
+                "end .",
+                "sum expression",
+                "start ."
+            ].map(JSON.stringify).join(" "),
+            "justify-items": "center",
+            "align-items": "center",
+            "vertical-align": "middle"
+        }
+    }) (
+        richEditor.FormulaicAtomSyntax() (" product("),
+        richEditor.FormulaicAtomNonSyntax({
+            styles: {
+                "grid-area": "sum",
+                "font-size": "1.5em"
+            }
+        }) ("Π"),
+        c.Container({
+            styles: {
+                "grid-area": "start",
+                "font-size": "0.6em"
+            }
+        }) (
+            variableSlot,
+            richEditor.FormulaicAtomNonSyntax() ("="),
+            richEditor.FormulaicAtomSeparator() (),
+            startSlot,
+        ),
+        richEditor.FormulaicAtomSeparator() (),
+        endSlot,
+        richEditor.FormulaicAtomSeparator() (),
+        expressionSlot,
+        richEditor.FormulaicAtomSyntax() (")")
+    );
+
+    return atom;
+});
+
 export var atoms = {
     multiplyOperator: new format.Atom(function(context) {
         return Text("×");
@@ -294,6 +442,12 @@ export var atoms = {
     log2: new format.Atom(function(context) {
         return LogabAtom({a: 2}) ();
     }, "log2"),
+    sum: new format.Atom(function(context) {
+        return SumAtom({variable: context.match[2]}) ();
+    }, /(sum(?:\(([a-zA-Z]),)?)$/),
+    product: new format.Atom(function(context) {
+        return ProductAtom({variable: context.match[2]}) ();
+    }, /(product(?:\(([a-zA-Z]),)?)$/),
     pi: new format.Atom(function(context) {
         return Text("π");
     }, "pi")
