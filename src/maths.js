@@ -364,6 +364,37 @@ export function createEngine(options = {}) {
             return product;
         }
 
+        static async deriv(expression$, variable$, value$) {
+            var variableTokens = variable$.tokens;
+
+            if (!variableTokens || !Object.keys(engine.variables).includes(variableTokens[0])) {
+                throw new ReferenceError("Invalid subject variable");
+            }
+
+            var variableName = variableTokens[0];
+            var oldVariableValue = engine.variables[variableName];
+
+            var value = await value$.evaluate();
+            var step = new this(10 ** Math.log10(value.real));
+
+            engine.variables[variableName] = this.add(value, step);
+
+            var result2 = await expression$.evaluate();
+
+            engine.variables[variableName] = this.subtract(value, step);
+
+            var result1 = await expression$.evaluate();
+
+            var derivative = this.divide(
+                this.subtract(result2, result1),
+                this.multiply(step, new this(2))
+            );
+
+            engine.variables[variableName] = oldVariableValue;
+
+            return derivative;
+        }
+
         roundDecimals(realDecimals = 0, imagDecimals = 0) {
             return new this.constructor(
                 Math.round(this.real * realDecimals) / realDecimals,
@@ -586,7 +617,7 @@ export function createEngine(options = {}) {
         registerComplexNumberMethod(name);
     });
 
-    ["sum", "product"].forEach(function(name) {
+    ["sum", "product", "deriv"].forEach(function(name) {
         registerComplexNumberMethod(name, false);
     });
 
