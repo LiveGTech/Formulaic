@@ -375,19 +375,54 @@ export function createEngine(options = {}) {
             var oldVariableValue = engine.variables[variableName];
 
             var value = await value$.evaluate();
-            var step = new this(10 ** Math.log10(value.real));
+            var step = new this(10 ** Math.floor(Math.log10(value.real) - 1));
 
             engine.variables[variableName] = this.add(value, step);
+
+            var result1 = await expression$.evaluate();
+
+            engine.variables[variableName] = this.subtract(value, step);
+
+            var result2 = await expression$.evaluate();
+
+            var derivative = this.divide(
+                this.subtract(result1, result2),
+                this.multiply(step, new this(2))
+            );
+
+            engine.variables[variableName] = oldVariableValue;
+
+            return derivative;
+        }
+
+        static async secderiv(expression$, variable$, value$) {
+            var variableTokens = variable$.tokens;
+
+            if (!variableTokens || !Object.keys(engine.variables).includes(variableTokens[0])) {
+                throw new ReferenceError("Invalid subject variable");
+            }
+
+            var variableName = variableTokens[0];
+            var oldVariableValue = engine.variables[variableName];
+
+            var value = await value$.evaluate();
+            var step = new this(10 ** Math.floor(Math.log10(value.real) - 1));
+
+            engine.variables[variableName] = this.add(value, step);
+
+            var result1 = await expression$.evaluate();
+
+            engine.variables[variableName] = value;
 
             var result2 = await expression$.evaluate();
 
             engine.variables[variableName] = this.subtract(value, step);
 
-            var result1 = await expression$.evaluate();
+            var result3 = await expression$.evaluate();
 
             var derivative = this.divide(
-                this.subtract(result2, result1),
-                this.multiply(step, new this(2))
+                this.add(this.subtract(result1, this.multiply(result2, new this(2))), result3),
+                this.exponent(step, new this(2))
             );
 
             engine.variables[variableName] = oldVariableValue;
@@ -617,7 +652,7 @@ export function createEngine(options = {}) {
         registerComplexNumberMethod(name);
     });
 
-    ["sum", "product", "deriv"].forEach(function(name) {
+    ["sum", "product", "deriv", "secderiv"].forEach(function(name) {
         registerComplexNumberMethod(name, false);
     });
 
