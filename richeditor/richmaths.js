@@ -410,6 +410,194 @@ var ProductAtom = astronaut.component("ProductAtom", function(props, children) {
     return atom;
 });
 
+var DerivativeAtom = astronaut.component("DerivativeAtom", function(props, children) {
+    var expressionSlot = c.FormulaicAtomSlot() ();
+    var variableSlot = c.FormulaicAtomSlot() ();
+    var valueSlot = c.FormulaicAtomSlot() ();
+    var openingBracket = richEditor.FormulaicAtomNonSyntax() ("(");
+    var closingBracket = richEditor.FormulaicAtomNonSyntax() (")");
+    var variablePreview = c.FormulaicAtomNonSyntax() ("?");
+
+    if (props.expression) {
+        expressionSlot.setText(props.expression);
+    }
+
+    if (props.variable) {
+        variableSlot.setText(props.variable);
+        variablePreview.setText(props.variable);
+    }
+
+    if (props.value) {
+        valueSlot.setText(props.value);
+    }
+
+    var atom = richEditor.FormulaicAtom() (
+        c.Container({
+            styles: {
+                "display": "inline-flex",
+                "flex-direction": "column",
+                "text-align": "center",
+                "vertical-align": "middle",
+                "margin-left": "0.1em",
+                "margin-right": "0.1em"
+            }
+        }) (
+            c.FormulaicAtomNonSyntax() ("d"),
+            c.TextFragment({
+                styles: {
+                    "height": "0",
+                    "border-top": "0.1em solid var(--secondaryText)",
+                    "overflow": "hidden",
+                    "white-space": "nowrap",
+                    "text-indent": "100%"
+                }
+            }) (),
+            c.TextFragment (
+                c.FormulaicAtomNonSyntax() ("d"),
+                variablePreview
+            )
+        ),
+        richEditor.FormulaicAtomNonSyntax() ("("),
+        richEditor.FormulaicAtomSyntax() (" deriv("),
+        expressionSlot,
+        richEditor.FormulaicAtomNonSyntax() (")"),
+        c.FormulaicAtomSeparator() (),
+        c.Container({
+            styles: {
+                "display": "inline",
+                "margin-inline-start": "0.25em",
+                "padding-top": "0.5em",
+                "padding-inline-start": "0.25em",
+                "border-inline-start": "0.1em solid var(--secondaryText)",
+                "vertical-align": "bottom"
+            }
+        }) (
+            variableSlot,
+            richEditor.FormulaicAtomNonSyntax() ("="),
+            c.FormulaicAtomSeparator() (),
+            valueSlot
+        ),
+        richEditor.FormulaicAtomSyntax() (")")
+    );
+
+    new ResizeObserver(function() {
+        var normalHeight = openingBracket.get().clientHeight;
+        var desiredHeight = atom.get().clientHeight + 2;
+
+        [openingBracket, closingBracket].forEach(function(bar) {
+            bar.setStyle("transform", `scaleY(${desiredHeight / normalHeight})`);
+        });
+    }).observe(atom.get());
+
+    variableSlot.on("input", function() {
+        variablePreview.setText(variableSlot.getText().trim() || "?");
+    });
+
+    return atom;
+});
+
+var SecondDerivativeAtom = astronaut.component("SecondDerivativeAtom", function(props, children) {
+    var expressionSlot = c.FormulaicAtomSlot() ();
+    var variableSlot = c.FormulaicAtomSlot() ();
+    var valueSlot = c.FormulaicAtomSlot() ();
+    var openingBracket = richEditor.FormulaicAtomNonSyntax() ("(");
+    var closingBracket = richEditor.FormulaicAtomNonSyntax() (")");
+    var variablePreview = c.FormulaicAtomNonSyntax() ("?");
+
+    if (props.expression) {
+        expressionSlot.setText(props.expression);
+    }
+
+    if (props.variable) {
+        variableSlot.setText(props.variable);
+        variablePreview.setText(props.variable);
+    }
+
+    if (props.value) {
+        valueSlot.setText(props.value);
+    }
+
+    var atom = richEditor.FormulaicAtom() (
+        c.Container({
+            styles: {
+                "display": "inline-flex",
+                "flex-direction": "column",
+                "text-align": "center",
+                "vertical-align": "middle",
+                "margin-left": "0.1em",
+                "margin-right": "0.1em"
+            }
+        }) (
+            c.TextFragment (
+                c.FormulaicAtomNonSyntax() ("d"),
+                c.ElementNode("sup", {
+                    // TODO: This style for superscripts and subscripts should really be in Adapt UI
+                    styles: {
+                        "transform": "translateY(-50%)",
+                        "font-size": "0.6em"
+                    }
+                }) (c.FormulaicAtomNonSyntax() ("2"))
+            ),
+            c.TextFragment({
+                styles: {
+                    "height": "0",
+                    "border-top": "0.1em solid var(--secondaryText)",
+                    "overflow": "hidden",
+                    "white-space": "nowrap",
+                    "text-indent": "100%"
+                }
+            }) (),
+            c.TextFragment (
+                c.FormulaicAtomNonSyntax() ("d"),
+                variablePreview,
+                c.ElementNode("sup", {
+                    // TODO: This style for superscripts and subscripts should really be in Adapt UI
+                    styles: {
+                        "transform": "translateY(-50%)",
+                        "font-size": "0.6em"
+                    }
+                }) (c.FormulaicAtomNonSyntax() ("2"))
+            ),
+        ),
+        richEditor.FormulaicAtomNonSyntax() ("("),
+        richEditor.FormulaicAtomSyntax() (" secderiv("),
+        expressionSlot,
+        richEditor.FormulaicAtomNonSyntax() (")"),
+        c.FormulaicAtomSeparator() (),
+        c.Container({
+            styles: {
+                "display": "inline",
+                "margin-inline-start": "0.25em",
+                "padding-top": "0.5em",
+                "padding-inline-start": "0.25em",
+                "border-inline-start": "0.1em solid var(--secondaryText)",
+                "vertical-align": "bottom"
+            }
+        }) (
+            variableSlot,
+            richEditor.FormulaicAtomNonSyntax() ("="),
+            c.FormulaicAtomSeparator() (),
+            valueSlot
+        ),
+        richEditor.FormulaicAtomSyntax() (")")
+    );
+
+    new ResizeObserver(function() {
+        var normalHeight = openingBracket.get().clientHeight;
+        var desiredHeight = atom.get().clientHeight + 2;
+
+        [openingBracket, closingBracket].forEach(function(bar) {
+            bar.setStyle("transform", `scaleY(${desiredHeight / normalHeight})`);
+        });
+    }).observe(atom.get());
+
+    variableSlot.on("input", function() {
+        variablePreview.setText(variableSlot.getText().trim() || "?");
+    });
+
+    return atom;
+});
+
 export var atoms = {
     multiplyOperator: new format.Atom(function(context) {
         return Text("×");
@@ -442,11 +630,17 @@ export var atoms = {
         return LogabAtom({a: 2}) ();
     }, "log2"),
     sum: new format.Atom(function(context) {
-        return SumAtom({variable: context.match[2]}) ();
-    }, /(sum(?:\(([a-zA-Z]),)?)$/),
+        return SumAtom({variable: context.props.defaultVariable}) ();
+    }, "sum"),
     product: new format.Atom(function(context) {
-        return ProductAtom({variable: context.match[2]}) ();
-    }, /(product(?:\(([a-zA-Z]),)?)$/),
+        return ProductAtom({variable: context.props.defaultVariable}) ();
+    }, "product"),
+    secderiv: new format.Atom(function(context) {
+        return SecondDerivativeAtom({variable: context.props.defaultVariable}) ();
+    }, "secderiv"),
+    deriv: new format.Atom(function(context) {
+        return DerivativeAtom({variable: context.props.defaultVariable}) ();
+    }, "deriv"),
     pi: new format.Atom(function(context) {
         return Text("π");
     }, "pi")

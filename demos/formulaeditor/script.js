@@ -7,7 +7,7 @@ import * as richMaths from "../../richeditor/richmaths.js";
 astronaut.unpack();
 
 $g.waitForLoad().then(function() {
-    var editor = richMaths.format.createRichEditor();
+    var editor = richMaths.format.createRichEditor({defaultVariable: "x"});
 
     maths.engine.variables = {
         x: new maths.ComplexNumberType(0),

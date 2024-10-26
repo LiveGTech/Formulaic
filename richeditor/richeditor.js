@@ -172,7 +172,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         var previousText = range.toString();
         var matchedAtom = null;
         var matchedText = null;
-        var context = {editor};
+        var context = {editor, props};
 
         props.format.atoms.forEach(function(atom) {
             if (atom.shorthandMatch == null || matchedAtom != null) {
