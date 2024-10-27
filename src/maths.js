@@ -430,6 +430,44 @@ export function createEngine(options = {}) {
             return derivative;
         }
 
+        static async integ(start$, end$, expression$, variable$) {
+            var variableTokens = variable$.tokens;
+
+            if (!variableTokens || !Object.keys(engine.variables).includes(variableTokens[0])) {
+                throw new ReferenceError("Invalid subject variable");
+            }
+
+            var variableName = variableTokens[0];
+            var oldVariableValue = engine.variables[variableName];
+
+            var start = await start$.evaluate();
+            var end = await end$.evaluate();
+            var step = this.divide(this.subtract(end, start), new this(engine.integrationSubdivisions));
+            var integral = new this(0);
+
+            for (var i = 0; i < engine.integrationSubdivisions; i++) {
+                engine.variables[variableName] = this.add(start, this.multiply(step, new this(i)));
+
+                var partIntegral = await expression$.evaluate();
+
+                if (i > 0 && i < engine.integrationSubdivisions - 1) {
+                    partIntegral = this.multiply(partIntegral, new this(2));
+                }
+
+                integral = this.add(integral, partIntegral);
+
+                if (i % 1000 == 999) {
+                    await yieldThread();
+                }
+            }
+
+            integral = this.multiply(integral, this.divide(step, new this(2)));
+
+            engine.variables[variableName] = oldVariableValue;
+
+            return integral;
+        }
+
         roundDecimals(realDecimals = 0, imagDecimals = 0) {
             return new this.constructor(
                 Math.round(this.real * realDecimals) / realDecimals,
@@ -652,7 +690,7 @@ export function createEngine(options = {}) {
         registerComplexNumberMethod(name);
     });
 
-    ["sum", "product", "deriv", "secderiv"].forEach(function(name) {
+    ["sum", "product", "deriv", "secderiv", "integ"].forEach(function(name) {
         registerComplexNumberMethod(name, false);
     });
 
@@ -666,6 +704,8 @@ export function createEngine(options = {}) {
     engine.constants["π"] = engine.constants["pi"];
 
     engine.variables = options.variables || {};
+
+    engine.integrationSubdivisions = 10e3;
 
     return engine;
 }
