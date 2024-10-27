@@ -598,6 +598,80 @@ var SecondDerivativeAtom = astronaut.component("SecondDerivativeAtom", function(
     return atom;
 });
 
+var IntegralAtom = astronaut.component("IntegralAtom", function(props, children) {
+    var startSlot = richEditor.FormulaicAtomSlot({
+        styles: {
+            "grid-area": "start",
+            "font-size": "0.6em"
+        }
+    }) ();
+
+    var endSlot = richEditor.FormulaicAtomSlot({
+        styles: {
+            "grid-area": "end",
+            "font-size": "0.6em"
+        }
+    }) ();
+
+    var expressionSlot = richEditor.FormulaicAtomSlot() ();
+
+    var variableSlot = richEditor.FormulaicAtomSlot() ();
+
+    if (props.start) {
+        startSlot.setText(props.start);
+    }
+
+    if (props.end) {
+        endSlot.setText(props.end);
+    }
+
+    if (props.expression) {
+        expressionSlot.setText(props.expression);
+    }
+
+    if (props.variable) {
+        variableSlot.setText(props.variable);
+    }
+
+    var atom = richEditor.FormulaicAtom (
+        richEditor.FormulaicAtomSyntax() (" integ("),
+        richEditor.FormulaicAtomNonSyntax({
+            styles: {
+                "font-size": "1.5em",
+                "vertical-align": "middle",
+                "margin-inline": "-0.25rem",
+            }
+        }) ("∫"),
+        c.Container({
+            styles: {
+                "display": "inline-flex",
+                "flex-direction": "column-reverse",
+                "gap": "0.75rem",
+                "margin-inline-end": "0.25rem",
+                "vertical-align": "middle"
+            }
+        }) (
+            startSlot,
+            richEditor.FormulaicAtomSeparator() (),
+            endSlot
+        ),
+        richEditor.FormulaicAtomSeparator() (),
+        expressionSlot,
+        richEditor.FormulaicAtomNonSyntax() (" d"),
+        richEditor.FormulaicAtomSeparator() (),
+        variableSlot,
+        richEditor.FormulaicAtomSyntax() (")"),
+        richEditor.FormulaicAtomNonSyntax({
+            styles: {
+                "display": "inline-block",
+                "width": "0.25rem"
+            }
+        }) ()
+    );
+
+    return atom;
+});
+
 export var atoms = {
     multiplyOperator: new format.Atom(function(context) {
         return Text("×");
@@ -641,6 +715,9 @@ export var atoms = {
     deriv: new format.Atom(function(context) {
         return DerivativeAtom({variable: context.props.defaultVariable}) ();
     }, "deriv"),
+    integ: new format.Atom(function(context) {
+        return IntegralAtom({variable: context.props.defaultVariable}) ();
+    }, "integ"),
     pi: new format.Atom(function(context) {
         return Text("π");
     }, "pi")
