@@ -726,10 +726,10 @@ export var atoms = {
 [
     "arg",
     "ln", "log",
-    "sin", "cos", "tan",
-    "sinh", "cosh", "tanh",
     "asin", "acos", "atan",
-    "asinh", "acosh", "atanh"
+    "asinh", "acosh", "atanh",
+    "sin", "cos", "tan",
+    "sinh", "cosh", "tanh"
 ].forEach(function(functionName) {
     format.registerAtom(new format.Atom(function(context) {
         return richEditor.FormulaicAtom() (
