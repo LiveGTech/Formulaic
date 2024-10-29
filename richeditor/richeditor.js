@@ -104,7 +104,7 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
             var atomBefore = range.startContainer.previousElementSibling;
 
             if (selection.anchorNode.nodeType != Node.TEXT_NODE && range.collapsed) {
-                atomBefore = selection.anchorNode.querySelector(".formulaic_atom:last-child");
+                atomBefore = selection.anchorNode.querySelector(".formulaic_atom:not(:scope .formulaic_atom .formulaic_atom):last-child");
             }
 
             if (!atomBefore || !editor.get().contains(atomBefore)) {

@@ -17,21 +17,60 @@ var astronaut = format.astronaut;
 const c = astronaut.components;
 
 var BracketAtom = astronaut.component("BracketAtom", function(props, children) {
-    var atom = richEditor.FormulaicAtom() (
+    var atom = richEditor.FormulaicAtom({
+        classes: [...(props?.classes || []), props.isClosing ? "formulaic_closingBracket" : "formulaic_openingBracket"]
+    }) (
         richEditor.FormulaicAtomNonSyntax() (props.isClosing ? ")" : "("),
         richEditor.FormulaicAtomSyntax() (props.isClosing ? " ) " : " ( ")
     );
 
-    new ResizeObserver(function() {
-        var normalHeight = atom.get().getBoundingClientRect;
-        var desiredHeight = props.parent.get().getBoundingClientRect;
-        var containerComputedStyles = getComputedStyle(props.parent.get());
+    function updateHeight() {
+        var normalHeight = atom.get().clientHeight;
 
-        desiredHeight -= parseFloat(containerComputedStyles.paddingTop || 0);
-        desiredHeight -= parseFloat(containerComputedStyles.paddingBottom || 0);
+        var sibling = props.isClosing ? atom.get().previousSibling : atom.get().nextSibling;
+        var desiredHeight = normalHeight;
+        var bracketDepth = 0;
 
+        while (true) {
+            if (sibling == null) {
+                break;
+            }
+
+            if (sibling.classList?.contains(props.isClosing ? "formulaic_openingBracket" : "formulaic_closingBracket")) {
+                bracketDepth--;
+
+                if (bracketDepth < 0) {
+                    break;
+                }
+            }
+
+
+            if (sibling.classList?.contains(props.isClosing ? "formulaic_closingBracket" : "formulaic_openingBracket")) {
+                bracketDepth++;
+            }
+
+            if (sibling.nodeType == Node.ELEMENT_NODE) {
+                var rect = sibling.getBoundingClientRect();
+
+                if (rect.height > desiredHeight && bracketDepth == 0) {
+                    desiredHeight = rect.height;
+                }
+            }
+
+            sibling = props.isClosing ? sibling.previousSibling : sibling.nextSibling;
+        }
+
+        if (desiredHeight)
         atom.setStyle("transform", `scaleY(${desiredHeight / normalHeight})`);
-    }).observe(props.parent.get());
+    }
+
+    requestAnimationFrame(function update() {
+        if (atom.get().parentNode != null) {
+            updateHeight();
+        }
+
+        requestAnimationFrame(update);
+    });
 
     return atom;
 });
