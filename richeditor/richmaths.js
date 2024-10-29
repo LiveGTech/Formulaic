@@ -21,7 +21,7 @@ var BracketAtom = astronaut.component("BracketAtom", function(props, children) {
         classes: [...(props?.classes || []), props.isClosing ? "formulaic_closingBracket" : "formulaic_openingBracket"]
     }) (
         richEditor.FormulaicAtomNonSyntax() (props.isClosing ? ")" : "("),
-        richEditor.FormulaicAtomSyntax() (props.isClosing ? " ) " : " ( ")
+        ...(props.excludeSyntax ? [] : [richEditor.FormulaicAtomSyntax() (props.isClosing ? " ) " : " ( ")])
     );
 
     var mainAtom = props.mainAtom || atom;
@@ -260,8 +260,8 @@ var AbsAtom = astronaut.component("AbsAtom", function(props, children) {
 var LogabAtom = astronaut.component("LogabAtom", function(props, children) {
     var aSlot = richEditor.FormulaicAtomSlot() ();
     var bSlot = richEditor.FormulaicAtomSlot() ();
-    var openingBracket = richEditor.FormulaicAtomNonSyntax() ("(");
-    var closingBracket = richEditor.FormulaicAtomNonSyntax() (")");
+    var openingBracket = BracketAtom({mainAtom: atom, isClosing: false, excludeSyntax: true}) ();
+    var closingBracket = BracketAtom({mainAtom: atom, isClosing: true, excludeSyntax: true}) ();
 
     if (props.a) {
         aSlot.setText(props.a);
@@ -458,8 +458,8 @@ var DerivativeAtom = astronaut.component("DerivativeAtom", function(props, child
     var expressionSlot = c.FormulaicAtomSlot() ();
     var variableSlot = c.FormulaicAtomSlot() ();
     var valueSlot = c.FormulaicAtomSlot() ();
-    var openingBracket = richEditor.FormulaicAtomNonSyntax() ("(");
-    var closingBracket = richEditor.FormulaicAtomNonSyntax() (")");
+    var openingBracket = BracketAtom({mainAtom: atom, isClosing: false, excludeSyntax: true}) ();
+    var closingBracket = BracketAtom({mainAtom: atom, isClosing: true, excludeSyntax: true}) ();
     var variablePreview = c.FormulaicAtomNonSyntax() ("?");
 
     if (props.expression) {
@@ -501,10 +501,10 @@ var DerivativeAtom = astronaut.component("DerivativeAtom", function(props, child
                 variablePreview
             )
         ),
-        richEditor.FormulaicAtomNonSyntax() ("("),
+        openingBracket,
         richEditor.FormulaicAtomSyntax() (" deriv("),
         expressionSlot,
-        richEditor.FormulaicAtomNonSyntax() (")"),
+        closingBracket,
         c.FormulaicAtomSeparator() (),
         c.Container({
             styles: {
@@ -544,8 +544,8 @@ var SecondDerivativeAtom = astronaut.component("SecondDerivativeAtom", function(
     var expressionSlot = c.FormulaicAtomSlot() ();
     var variableSlot = c.FormulaicAtomSlot() ();
     var valueSlot = c.FormulaicAtomSlot() ();
-    var openingBracket = richEditor.FormulaicAtomNonSyntax() ("(");
-    var closingBracket = richEditor.FormulaicAtomNonSyntax() (")");
+    var openingBracket = BracketAtom({mainAtom: atom, isClosing: false, excludeSyntax: true}) ();
+    var closingBracket = BracketAtom({mainAtom: atom, isClosing: true, excludeSyntax: true}) ();
     var variablePreview = c.FormulaicAtomNonSyntax() ("?");
 
     if (props.expression) {
@@ -603,10 +603,10 @@ var SecondDerivativeAtom = astronaut.component("SecondDerivativeAtom", function(
                 }) (c.FormulaicAtomNonSyntax() ("2"))
             ),
         ),
-        richEditor.FormulaicAtomNonSyntax() ("("),
+        openingBracket,
         richEditor.FormulaicAtomSyntax() (" secderiv("),
         expressionSlot,
-        richEditor.FormulaicAtomNonSyntax() (")"),
+        closingBracket,
         c.FormulaicAtomSeparator() (),
         c.Container({
             styles: {
