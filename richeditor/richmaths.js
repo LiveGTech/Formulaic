@@ -735,10 +735,10 @@ export var atoms = {
     }, /[()]$/),
     fraction: new format.Atom(function(context) {
         return FractionAtom({numerator: context.match[2]}) ();
-    }, /(([^+\-*/×÷]*)over)$/),
+    }, /(([^+\-*/×÷=]*)over)$/),
     power: new format.Atom(function(context) {
         return PowerAtom({base: context.match[2], exponent: context.match[3]}) ();
-    }, /(([^+\-*/×÷]*)\^(-?\d+)?)$/),
+    }, /(([^+\-*/×÷=]*)\^(-?\d+)?)$/),
     sqrt: new format.Atom(function(context) {
         return SquareRootAtom() ();
     }, "sqrt"),
