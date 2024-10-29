@@ -27,6 +27,12 @@ $g.waitForLoad().then(function() {
     var decimalPointIsCommaInput = CheckboxInput() ();
     var resultReadout = Paragraph() ();
 
+    var angleUnitsInput = SelectionInput({value: Math.PI}) (
+        SelectionInputOption({value: 360}) ("Degrees"),
+        SelectionInputOption({value: Math.PI}) ("Radians"),
+        SelectionInputOption({value: 400}) ("Gradians")
+    );
+
     function updateLinearExpression() {
         linearExpression.setText(editor.inter.getExpression({separator: maths.engine.separator}));
     }
@@ -38,6 +44,10 @@ $g.waitForLoad().then(function() {
         maths.engine.separator = decimalPointIsCommaInput.getValue() ? ";" : ",";
 
         updateLinearExpression();
+    });
+
+    angleUnitsInput.on("change", function() {
+        maths.engine.angleUnit = Number(angleUnitsInput.getValue());
     });
 
     calculateButton.on("click", function() {
@@ -78,9 +88,16 @@ $g.waitForLoad().then(function() {
                 Text("Linear expression"),
                 linearExpression
             ),
-            Label (
-                decimalPointIsCommaInput,
-                Text("Decimal point is comma")
+            Accordion (
+                Text("Options"),
+                Label (
+                    decimalPointIsCommaInput,
+                    Text("Decimal point is comma")
+                ),
+                Label (
+                    Text("Angle units"),
+                    angleUnitsInput
+                )
             ),
             ButtonRow (
                 calculateButton,

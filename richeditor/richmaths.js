@@ -24,10 +24,12 @@ var BracketAtom = astronaut.component("BracketAtom", function(props, children) {
         richEditor.FormulaicAtomSyntax() (props.isClosing ? " ) " : " ( ")
     );
 
+    var mainAtom = props.mainAtom || atom;
+
     function updateHeight() {
         var normalHeight = atom.get().clientHeight;
 
-        var sibling = props.isClosing ? atom.get().previousSibling : atom.get().nextSibling;
+        var sibling = props.isClosing ? mainAtom.get().previousSibling : mainAtom.get().nextSibling;
         var desiredHeight = normalHeight;
         var bracketDepth = 0;
 
@@ -36,23 +38,26 @@ var BracketAtom = astronaut.component("BracketAtom", function(props, children) {
                 break;
             }
 
-            if (sibling.classList?.contains(props.isClosing ? "formulaic_openingBracket" : "formulaic_closingBracket")) {
-                bracketDepth--;
-
-                if (bracketDepth < 0) {
-                    break;
-                }
-            }
-
-
-            if (sibling.classList?.contains(props.isClosing ? "formulaic_closingBracket" : "formulaic_openingBracket")) {
-                bracketDepth++;
-            }
-
             if (sibling.nodeType == Node.ELEMENT_NODE) {
+                var otherBracketClass = props.isClosing ? "formulaic_openingBracket" : "formulaic_closingBracket";
+
+                if (sibling.matches(`.${otherBracketClass}, .formulaic_atom:has(> .${otherBracketClass})`)) {
+                    bracketDepth--;
+
+                    if (bracketDepth < 0) {
+                        break;
+                    }
+                }
+
+                var ownBracketClass = props.isClosing ? "formulaic_closingBracket" : "formulaic_openingBracket";
+
+                if (sibling.matches(`.${ownBracketClass}, .formulaic_atom:has(> .${ownBracketClass})`)) {
+                    bracketDepth++;
+                }
+
                 var rect = sibling.getBoundingClientRect();
 
-                if (rect.height > desiredHeight && bracketDepth == 0) {
+                if (rect.height > desiredHeight) {
                     desiredHeight = rect.height;
                 }
             }
@@ -65,7 +70,7 @@ var BracketAtom = astronaut.component("BracketAtom", function(props, children) {
     }
 
     requestAnimationFrame(function update() {
-        if (atom.get().parentNode != null) {
+        if (mainAtom.get().parentNode != null) {
             updateHeight();
         }
 
@@ -711,15 +716,22 @@ var IntegralAtom = astronaut.component("IntegralAtom", function(props, children)
     return atom;
 });
 
+var ReplacementText = astronaut.component("ReplacementText", function(props, children) {
+    return TextFragment({
+        ...props,
+        classes: [...(props?.classes || []), "formulaic_text"]
+    }) (...children);
+});
+
 export var atoms = {
     multiplyOperator: new format.Atom(function(context) {
-        return Text("×");
+        return ReplacementText() ("×");
     }, "*"),
     divideOperator: new format.Atom(function(context) {
-        return Text("÷");
+        return ReplacementText() ("÷");
     }, "/"),
     bracket: new format.Atom(function(context) {
-        return BracketAtom({parent: context.parent, isClosing: context.match[0] == ")"}) ();
+        return BracketAtom({isClosing: context.match[0] == ")"}) ();
     }, /[()]$/),
     fraction: new format.Atom(function(context) {
         return FractionAtom({numerator: context.match[2]}) ();
@@ -758,7 +770,7 @@ export var atoms = {
         return IntegralAtom({variable: context.props.defaultVariable}) ();
     }, "integ"),
     pi: new format.Atom(function(context) {
-        return Text("π");
+        return ReplacementText() ("π");
     }, "pi")
 };
 
@@ -771,10 +783,14 @@ export var atoms = {
     "sinh", "cosh", "tanh"
 ].forEach(function(functionName) {
     format.registerAtom(new format.Atom(function(context) {
-        return richEditor.FormulaicAtom() (
+        var atom = richEditor.FormulaicAtom() ();
+
+        atom.add(
             Text(functionName),
-            BracketAtom({parent: context.parent, isClosing: false}) ()
+            BracketAtom({mainAtom: atom, isClosing: false}) ()
         );
+
+        return atom;
     }, functionName + "("));
 });
 

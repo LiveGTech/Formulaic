@@ -209,12 +209,18 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
         var matchStart = range.endContainer.textContent.lastIndexOf(matchedText);
         var matchEnd = matchStart + matchedText.length;
         var elementToInsert = matchedAtom.generator(context);
+        var nodeToInsert = elementToInsert.get();
 
         range.setStart(range.endContainer, matchStart);
         range.setEnd(range.endContainer, matchEnd);
 
         range.deleteContents();
-        range.insertNode(elementToInsert.get());
+
+        if (elementToInsert.is(".formulaic_text")) {
+            nodeToInsert = document.createTextNode(elementToInsert.getText());
+        }
+
+        range.insertNode(nodeToInsert);
 
         var vacantSlots = elementToInsert.find(".formulaic_atomSlot:empty");
 
@@ -222,8 +228,8 @@ export var FormulaicRichEditor = astronaut.component("FormulaicRichEditor", func
             range.setStart(vacantSlots.first().get(), 0);
             range.collapse(true);
         } else {
-            range.setStartAfter(elementToInsert.get());
-            range.setEndAfter(elementToInsert.get());
+            range.setStartAfter(nodeToInsert);
+            range.setEndAfter(nodeToInsert);
         }
 
         selection.removeAllRanges();

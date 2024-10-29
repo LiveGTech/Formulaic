@@ -144,7 +144,7 @@ export function createEngine(options = {}) {
         }
 
         static arg(value) {
-            return new this(Math.atan2(value.imag, value.real));
+            return fromRadians(new this(Math.atan2(value.imag, value.real)));
         }
 
         static ln(value) {
@@ -169,6 +169,12 @@ export function createEngine(options = {}) {
         }
 
         static sin(value) {
+            value = toRadians(value);
+
+            if (value.imag == 0) {
+                return new this(Math.sin(value.real));
+            }
+
             return new this(
                 Math.sin(value.real) * Math.cosh(value.imag),
                 Math.cos(value.real) * Math.sinh(value.imag)
@@ -176,6 +182,12 @@ export function createEngine(options = {}) {
         }
 
         static cos(value) {
+            value = toRadians(value);
+
+            if (value.imag == 0) {
+                return new this(Math.cos(value.real));
+            }
+
             return new this(
                 Math.cos(value.real) * Math.cosh(value.imag),
                 -1 * Math.sin(value.real) * Math.sinh(value.imag)
@@ -183,6 +195,12 @@ export function createEngine(options = {}) {
         }
 
         static tan(value) {
+            value = toRadians(value);
+
+            if (value.imag == 0) {
+                return new this(Math.tan(value.real));
+            }
+
             var numerator = new this(Math.tan(value.real), Math.tanh(value.imag));
             var denominatorPart = new this(0, Math.tan(value.real) * Math.tanh(value.imag));
 
@@ -193,6 +211,12 @@ export function createEngine(options = {}) {
         }
 
         static sinh(value) {
+            value = toRadians(value);
+
+            if (value.imag == 0) {
+                return new this(Math.sinh(value.real));
+            }
+
             return new this(
                 Math.sinh(value.real) * Math.cos(value.imag),
                 Math.cosh(value.real) * Math.sin(value.imag)
@@ -200,6 +224,12 @@ export function createEngine(options = {}) {
         }
 
         static cosh(value) {
+            value = toRadians(value);
+
+            if (value.imag == 0) {
+                return new this(Math.cosh(value.real));
+            }
+
             return new this(
                 Math.cosh(value.real) * Math.cos(value.imag),
                 Math.sinh(value.real) * Math.sin(value.imag)
@@ -207,6 +237,12 @@ export function createEngine(options = {}) {
         }
 
         static tanh(value) {
+            value = toRadians(value);
+
+            if (value.imag == 0) {
+                return new this(Math.tanh(value.real));
+            }
+
             var numerator = new this(Math.tanh(value.real), Math.tan(value.imag));
             var denominatorPart = new this(0, Math.tanh(value.real) * Math.tan(value.imag));
 
@@ -216,25 +252,33 @@ export function createEngine(options = {}) {
             );
         }
 
-        static asin(value) {
+        static async asin(value) {
             // asin(z) = (1 / i) * ln(zi + sqrt(1 - (z ** 2)))
 
-            return this.multiply(
+            if (value.real >= 0 && value.real <= 1 && value.imag == 0) {
+                return fromRadians(new this(Math.asin(value.real)));
+            }
+
+            return fromRadians(this.multiply(
                 this.divide(new this(1), new this(0, 1)),
                 this.ln(this.add(
                     this.multiply(value, new this(0, 1)),
-                    this.sqrt(this.subtract(
+                    await this.sqrt(this.subtract(
                         new this(1),
                         this.exponent(value, new this(2))
                     ))
                 ))
-            );
+            ));
         }
 
         static acos(value) {
             // acos(z) = (1 / i) * ln(z + sqrt((z ** 2) - 1))
 
-            return this.multiply(
+            if (value.real >= 0 && value.real <= 1 && value.imag == 0) {
+                return fromRadians(new this(Math.acos(value.real)));
+            }
+
+            return fromRadians(this.multiply(
                 this.divide(new this(1), new this(0, 1)),
                 this.ln(this.add(
                     value,
@@ -243,55 +287,71 @@ export function createEngine(options = {}) {
                         new this(1)
                     ))
                 ))
-            );
+            ));
         }
 
         static atan(value) {
             // atan(z) = (1 / 2i) * ln((i - z) / (i + z))
 
-            return this.multiply(
+            if (value.imag == 0) {
+                return fromRadians(new this(Math.atan(value.real)));
+            }
+
+            return fromRadians(this.multiply(
                 this.divide(new this(1), new this(0, 2)),
                 this.ln(this.divide(
                     this.subtract(new this(0, 1), value),
                     this.add(new this(0, 1), value)
                 ))
-            );
+            ));
         }
 
         static asinh(value) {
             // asinh(z) = ln(z + sqrt(1 + (z ** 2)))
 
-            return this.ln(this.add(
+            if (value.real >= 0 && value.real <= 1 && value.imag == 0) {
+                return fromRadians(new this(Math.asinh(value.real)));
+            }
+
+            return fromRadians(this.ln(this.add(
                 value,
                 this.sqrt(this.add(
                     new this(1),
                     this.exponent(value, new this(2))
                 ))
-            ));
+            )));
         }
 
         static acosh(value) {
             // acosh(z) = ln(z + (sqrt(z + 1) * sqrt(z - 1)))
 
-            return this.ln(this.add(
+            if (value.real >= 0 && value.real <= 1 && value.imag == 0) {
+                return fromRadians(new this(Math.acosh(value.real)));
+            }
+
+            return fromRadians(this.ln(this.add(
                 value,
                 this.multiply(
                     this.sqrt(this.add(value, new this(1))),
                     this.sqrt(this.subtract(value, new this(1)))
                 )
-            ));
+            )));
         }
 
         static atanh(value) {
             // atanh(z) = (1 / 2) * (ln(1 + z) - ln(1 - z))
 
-            return this.multiply(
+            if (value.real >= 0 && value.real <= 1 && value.imag == 0) {
+                return fromRadians(new this(Math.atanh(value.real)));
+            }
+
+            return fromRadians(this.multiply(
                 new this(1 / 2),
                 this.subtract(
                     this.ln(this.add(new this(1), value)),
                     this.ln(this.subtract(new this(1), value))
                 )
-            );
+            ));
         }
 
         static async sum(variable$, start$, end$, expression$) {
@@ -468,7 +528,7 @@ export function createEngine(options = {}) {
             return integral;
         }
 
-        roundDecimals(realDecimals = 0, imagDecimals = 0) {
+        roundDecimals(realDecimals, imagDecimals) {
             return new this.constructor(
                 Math.round(this.real * realDecimals) / realDecimals,
                 Math.round(this.imag * imagDecimals) / imagDecimals
@@ -673,6 +733,20 @@ export function createEngine(options = {}) {
         }
     })());
 
+    function toRadians(value) {
+        return new ComplexNumberType(
+            (value.real * 2 * Math.PI) / engine.angleUnit,
+            (value.imag * 2 * Math.PI) / engine.angleUnit
+        );
+    }
+
+    function fromRadians(value) {
+        return new ComplexNumberType(
+            (value.real * engine.angleUnit) / (2 * Math.PI),
+            (value.imag * engine.angleUnit) / (2 * Math.PI)
+        );
+    }
+
     function registerComplexNumberMethod(functionName, evaluateArgs = true) {
         engine.registerFunction(new engine.FunctionBinding(functionName, function() {
             return ComplexNumberType[functionName](...arguments);
@@ -695,6 +769,8 @@ export function createEngine(options = {}) {
     });
 
     engine.decimalPointIsComma = false;
+    engine.angleUnit = 2 * Math.PI;
+    engine.integrationSubdivisions = 10e3;
 
     engine.constants = options.constants || {
         "pi": new ComplexNumberType(Math.PI),
@@ -704,8 +780,6 @@ export function createEngine(options = {}) {
     engine.constants["π"] = engine.constants["pi"];
 
     engine.variables = options.variables || {};
-
-    engine.integrationSubdivisions = 10e3;
 
     return engine;
 }
