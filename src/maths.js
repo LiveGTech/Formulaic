@@ -50,6 +50,54 @@ export function createEngine(options = {}) {
             );
         }
 
+        static mod(a, b) {
+            if (a.imag != 0 || b.imag != 0) {
+                return NaN;
+            }
+
+            if (b.real == 0) {
+                return a;
+            }
+
+            return new this(a.real - (b.real * Math.floor(a.real / b.real)));
+        }
+
+        static and(a, b) {
+            return new this(a.real & b.real, a.imag & b.imag);
+        }
+
+        static or(a, b) {
+            return new this(a.real | b.real, a.imag | b.imag);
+        }
+
+        static nand(a, b) {
+            if (a.imag == 0 && b.imag == 0) {
+                return new this(~(a.real & b.real));
+            }
+
+            return new this(~(a.real & b.real), ~(a.imag & b.imag));
+        }
+
+        static xor(a, b) {
+            return new this(a.real ^ b.real, a.imag ^ b.imag);
+        }
+
+        static not(value) {
+            if (value.imag == 0) {
+                return new this(~value.real);
+            }
+
+            return new this(~value.real, ~value.imag);
+        }
+
+        static bsl(a, b) {
+            return new this(a.real << b.real, a.imag << b.imag);
+        }
+
+        static bsr(a, b) {
+            return new this(a.real >> b.real, a.imag >> b.imag);
+        }
+
         // @source reference https://github.com/infusion/Complex.js/blob/master/complex.js
         // @licence mit https://raw.githubusercontent.com/infusion/Complex.js/master/LICENSE
         static exponent(value, power) {
@@ -100,7 +148,7 @@ export function createEngine(options = {}) {
             }
         
             if (value.real < 0) {
-                return Promise.resolve(new this(0, Math.sqrt(Math.abs(value.real))));
+                return new this(0, Math.sqrt(Math.abs(value.real)));
             }
         
             return new this(Math.sqrt(value.real));
@@ -263,7 +311,7 @@ export function createEngine(options = {}) {
                 this.divide(new this(1), new this(0, 1)),
                 this.ln(this.add(
                     this.multiply(value, new this(0, 1)),
-                    await this.sqrt(this.subtract(
+                    this.sqrt(this.subtract(
                         new this(1),
                         this.exponent(value, new this(2))
                     ))
@@ -656,6 +704,27 @@ export function createEngine(options = {}) {
     }));
 
     engine.registerOperator(new engine.BinaryOperator({
+        "or": new engine.FunctionBinding("or", (a, b) => Promise.resolve(ComplexNumberType.or(a, b)))
+    }));
+
+    engine.registerOperator(new engine.BinaryOperator({
+        "xor": new engine.FunctionBinding("xor", (a, b) => Promise.resolve(ComplexNumberType.xor(a, b)))
+    }));
+
+    engine.registerOperator(new engine.BinaryOperator({
+        "and": new engine.FunctionBinding("and", (a, b) => Promise.resolve(ComplexNumberType.and(a, b)))
+    }));
+
+    engine.registerOperator(new engine.BinaryOperator({
+        "nand": new engine.FunctionBinding("nand", (a, b) => Promise.resolve(ComplexNumberType.nand(a, b)))
+    }));
+
+    engine.registerOperator(new engine.BinaryOperator({
+        "<<": new engine.FunctionBinding("bsl", (a, b) => Promise.resolve(ComplexNumberType.bsl(a, b))),
+        ">>": new engine.FunctionBinding("bsr", (a, b) => Promise.resolve(ComplexNumberType.bsr(a, b)))
+    }));
+
+    engine.registerOperator(new engine.BinaryOperator({
         "+": new engine.FunctionBinding("add", (a, b) => Promise.resolve(ComplexNumberType.add(a, b))),
         "-": new engine.FunctionBinding("subtract", (a, b) => Promise.resolve(ComplexNumberType.subtract(a, b)))
     }));
@@ -664,7 +733,12 @@ export function createEngine(options = {}) {
         "*": multiplyOperator,
         "×": multiplyOperator,
         "/": divideOperator,
-        "÷": divideOperator
+        "÷": divideOperator,
+        "mod": new engine.FunctionBinding("mod", (a, b) => Promise.resolve(ComplexNumberType.mod(a, b)))
+    }));
+
+    engine.registerOperator(new engine.UnaryOperator({
+        "not": new engine.FunctionBinding("negate", (value) => Promise.resolve(ComplexNumberType.not(value)))
     }));
 
     engine.registerOperator(new engine.UnaryOperator({

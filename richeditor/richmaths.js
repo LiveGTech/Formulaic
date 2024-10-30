@@ -723,6 +723,15 @@ var ReplacementText = astronaut.component("ReplacementText", function(props, chi
     }) (...children);
 });
 
+var ReplacementAtom = astronaut.component("ReplacementAtom", function(props, children) {
+    return richEditor.FormulaicAtom ({
+        ...props
+    }) (
+        richEditor.FormulaicAtomSyntax() (children.map((child) => child.getText()).join("")),
+        richEditor.FormulaicAtomNonSyntax() (...children)
+    );
+});
+
 export var atoms = {
     multiplyOperator: new format.Atom(function(context) {
         return ReplacementText() ("×");
@@ -771,7 +780,25 @@ export var atoms = {
     }, "integ"),
     pi: new format.Atom(function(context) {
         return ReplacementText() ("π");
-    }, "pi")
+    }, "pi"),
+    mod: new format.Atom(function(context) {
+        return ReplacementAtom() (" mod ");
+    }, "mod"),
+    nand: new format.Atom(function(context) {
+        return ReplacementAtom() (" nand ");
+    }, "nand"),
+    xor: new format.Atom(function(context) {
+        return ReplacementAtom() (" xor ");
+    }, "xor"),
+    and: new format.Atom(function(context) {
+        return ReplacementAtom() (" and ");
+    }, "and"),
+    or: new format.Atom(function(context) {
+        return ReplacementAtom() (" or ");
+    }, "or"),
+    not: new format.Atom(function(context) {
+        return ReplacementAtom() ("not ");
+    }, "not")
 };
 
 [
