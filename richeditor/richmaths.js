@@ -815,11 +815,11 @@ export var atoms = {
         return IntegralAtom({variable: context.props.defaultVariable}) ();
     }, "integ"),
     ncr: new format.Atom(function(context) {
-        return NRAtom({functionName: "ncr", symbol: "C", n: context.match[2]}) ();
-    }, /(([^+\-*/×÷=n]+)c|ncr)$/i),
+        return NRAtom({functionName: "ncr", symbol: "C"}) ();
+    }, "ncr"),
     npr: new format.Atom(function(context) {
-        return NRAtom({functionName: "npr", symbol: "P", n: context.match[2]}) ();
-    }, /(([^+\-*/×÷=n]+)p|npr)$/i),
+        return NRAtom({functionName: "npr", symbol: "P"}) ();
+    }, "npr"),
     pi: new format.Atom(function(context) {
         return ReplacementText() ("π");
     }, "pi"),
