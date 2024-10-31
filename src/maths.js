@@ -423,6 +423,30 @@ export function createEngine(options = {}) {
             );
         }
 
+        static randint(min, max) {
+            if (min.imag != 0 || max.imag != 0) {
+                return NaN;
+            }
+
+            return new this(Math.floor((Math.random() * (max.real - min.real + 1)) + min.real));
+        }
+
+        static async mean() {
+            var sum = new this(0);
+            var count = 0;
+
+            for (var argument of arguments) {
+                sum = this.add(sum, argument);
+                count++;
+
+                if (count % 1000 == 999) {
+                    await yieldThread();
+                }
+            }
+
+            return this.divide(sum, new this(count));
+        }
+
         static async sum(variable$, start$, end$, expression$) {
             var variableTokens = variable$.tokens;
 
@@ -812,6 +836,10 @@ export function createEngine(options = {}) {
                 return new engine.LiteralToken(NumberLiteral, match[1]);
             }
 
+            if (code.startsWith("rand#")) {
+                return new engine.VariableToken("rand#", "rand#", () => Promise.resolve(new ComplexNumberType(Math.random())), false);
+            }
+
             for (var constantName of Object.keys(engine.constants)) {
                 if (code.startsWith(constantName)) {
                     return new engine.VariableToken(constantName, constantName, () => Promise.resolve(engine.constants[constantName]), false);
@@ -855,7 +883,8 @@ export function createEngine(options = {}) {
         "sinh", "cosh", "tanh",
         "asin", "acos", "atan",
         "asinh", "acosh", "atanh",
-        "npr", "ncr"
+        "npr", "ncr",
+        "randint", "mean"
     ].forEach(function(name) {
         registerComplexNumberMethod(name);
     });

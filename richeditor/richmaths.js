@@ -834,13 +834,16 @@ export var atoms = {
     }, "xor"),
     and: new format.Atom(function(context) {
         return ReplacementAtom() (" and ");
-    }, "and"),
+    }, /(?:^|[^r])(and)$/),
     or: new format.Atom(function(context) {
         return ReplacementAtom() (" or ");
     }, "or"),
     not: new format.Atom(function(context) {
         return ReplacementAtom() ("not ");
-    }, "not")
+    }, "not"),
+    randfrac: new format.Atom(function(context) {
+        return ReplacementAtom() ("rand#");
+    }, "rand#")
 };
 
 [
@@ -849,7 +852,8 @@ export var atoms = {
     "asin", "acos", "atan",
     "asinh", "acosh", "atanh",
     "sin", "cos", "tan",
-    "sinh", "cosh", "tanh"
+    "sinh", "cosh", "tanh",
+    "mean", "randint"
 ].forEach(function(functionName) {
     format.registerAtom(new format.Atom(function(context) {
         var atom = richEditor.FormulaicAtom() ();
