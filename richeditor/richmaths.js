@@ -716,6 +716,42 @@ var IntegralAtom = astronaut.component("IntegralAtom", function(props, children)
     return atom;
 });
 
+var NRAtom = astronaut.component("NRAtom", function(props, children) {
+    var nSlot = richEditor.FormulaicAtomSlot() ();
+    var rSlot = richEditor.FormulaicAtomSlot() ();
+
+    if (props.n) {
+        nSlot.setText(props.n);
+    }
+
+    if (props.r) {
+        rSlot.setText(props.r);
+    }
+
+    return richEditor.FormulaicAtom (
+        richEditor.FormulaicAtomSyntax() (` ${props.functionName}(`),
+        c.ElementNode("sup", {
+            // TODO: This style for superscripts and subscripts should really be in Adapt UI
+            styles: {
+                "transform": "translateY(-50%)",
+                "font-size": "0.6em"
+            }
+        }) (nSlot),
+        richEditor.FormulaicAtomNonSyntax (
+            c.BoldTextFragment() (props.symbol),
+        ),
+        richEditor.FormulaicAtomSeparator() (),
+        c.ElementNode("sub", {
+            // TODO: This style for superscripts and subscripts should really be in Adapt UI
+            styles: {
+                "transform": "translateY(-50%)",
+                "font-size": "0.6em"
+            }
+        }) (rSlot),
+        richEditor.FormulaicAtomSyntax() (")")
+    );
+});
+
 var ReplacementText = astronaut.component("ReplacementText", function(props, children) {
     return TextFragment({
         ...props,
@@ -778,6 +814,12 @@ export var atoms = {
     integ: new format.Atom(function(context) {
         return IntegralAtom({variable: context.props.defaultVariable}) ();
     }, "integ"),
+    ncr: new format.Atom(function(context) {
+        return NRAtom({functionName: "ncr", symbol: "C", n: context.match[2]}) ();
+    }, /(([^+\-*/×÷=n]+)c|ncr)$/i),
+    npr: new format.Atom(function(context) {
+        return NRAtom({functionName: "npr", symbol: "P", n: context.match[2]}) ();
+    }, /(([^+\-*/×÷=n]+)p|npr)$/i),
     pi: new format.Atom(function(context) {
         return ReplacementText() ("π");
     }, "pi"),

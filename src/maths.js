@@ -402,6 +402,27 @@ export function createEngine(options = {}) {
             ));
         }
 
+        static async ncr(n, r) {
+            // nCr = n! / (r! * (n - r)!)
+
+            return this.divide(
+                await this.factorial(n),
+                this.multiply(
+                    await this.factorial(r),
+                    await this.factorial(this.subtract(n, r))
+                )
+            );
+        }
+
+        static async npr(n, r) {
+            // nPr = n! / ((n - r)!)
+
+            return this.divide(
+                await this.factorial(n),
+                await this.factorial(this.subtract(n, r))
+            );
+        }
+
         static async sum(variable$, start$, end$, expression$) {
             var variableTokens = variable$.tokens;
 
@@ -833,7 +854,8 @@ export function createEngine(options = {}) {
         "sin", "cos", "tan",
         "sinh", "cosh", "tanh",
         "asin", "acos", "atan",
-        "asinh", "acosh", "atanh"
+        "asinh", "acosh", "atanh",
+        "npr", "ncr"
     ].forEach(function(name) {
         registerComplexNumberMethod(name);
     });
