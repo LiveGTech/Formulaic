@@ -21,9 +21,10 @@ $g.waitForLoad().then(function() {
     }) ();
 
     var calculateButton = Button() ("Calculate");
-    var insertFractionButton = Button("secondary") ("Insert fraction");
-    var insertSquareButton = Button("secondary") ("Insert square");
-    var insertLnButton = Button("secondary") ("Insert ln");
+    var insertFractionButton = Button("secondary") ("x/y");
+    var insertSquareButton = Button("secondary") ("x^2");
+    var insertLnButton = Button("secondary") ("ln");
+    var insertExponentButton = Button("secondary") ("×10^");
     var decimalPointIsCommaInput = CheckboxInput() ();
     var resultReadout = Paragraph() ();
 
@@ -80,6 +81,12 @@ $g.waitForLoad().then(function() {
         event.preventDefault();
     });
 
+    insertExponentButton.on("click", function(event) {
+        editor.inter.insertText("×10^");
+
+        event.preventDefault();
+    });
+
     astronaut.render(
         Section (
             Heading() ("Formulaic Formula Editor Demo"),
@@ -103,7 +110,8 @@ $g.waitForLoad().then(function() {
                 calculateButton,
                 insertFractionButton,
                 insertSquareButton,
-                insertLnButton
+                insertLnButton,
+                insertExponentButton
             ),
             resultReadout
         )

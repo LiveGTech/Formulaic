@@ -841,9 +841,24 @@ export var atoms = {
     not: new format.Atom(function(context) {
         return ReplacementAtom() ("not ");
     }, "not"),
+    bsl: new format.Atom(function(context) {
+        return ReplacementAtom() ("<<");
+    }, "<<"),
+    bsr: new format.Atom(function(context) {
+        return ReplacementAtom() (">>");
+    }, ">>"),
     randfrac: new format.Atom(function(context) {
         return ReplacementAtom() ("rand#");
-    }, "rand#")
+    }, "rand#"),
+    bin: new format.Atom(function(context) {
+        return ReplacementAtom() ("0b");
+    }, "0b"),
+    oct: new format.Atom(function(context) {
+        return ReplacementAtom() ("0o");
+    }, "0o"),
+    hex: new format.Atom(function(context) {
+        return ReplacementAtom() ("0x");
+    }, "0x")
 };
 
 [
